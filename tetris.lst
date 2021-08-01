@@ -1,0 +1,2801 @@
+Microsoft (R) Macro Assembler Version 6.15.8803		    12/30/17 21:50:11
+tetris.asm						     Page 1 - 1
+
+
+				Include Irvine16.inc
+			      C .NOLIST
+			      C 
+			      C 
+				include soac16.inc
+			      C Include Irvine16.inc
+			      C .NOLIST
+			      C .model small,stdcall
+C:\Users\Msi Ge Aparcho\Desktop\TaizTextEditor-master\Tools\\Masm615\INCLUDE\Irvine16.inc(9) : warning A4011: with /coff switch
+			      C 
+			      C 
+			      C Include MACROS.inc
+			      C .NOLIST
+			      C 
+			      C 
+			      C 
+ 0000			      C .code
+ 0000			      C InitMode PROC
+			      C     ;mov al, 10h
+ 0000  B4 00		      C     mov ah, 0
+ 0002  CD 10		      C     int 10h
+ 0004  C3		      C     ret
+ 0005			      C InitMode ENDP
+			      C 
+ 0005			      C PrintPX PROC USES ax bx
+ 0007  B4 0C		      C     mov ah, 0Ch
+ 0009  B0 0F		      C     mov al, 15       ; Color 0-16
+ 000B  B7 00		      C     mov bh, 0        ; video page
+			      C     ;mov cx, 10      ; x_coord
+			      C     ;mov dx, 10      ; y_coord
+ 000D  CD 10		      C     int 10h
+			      C     ret
+ 0012			      C PrintPX ENDP
+			      C 
+ 0012			      C PrintChar PROC
+ 0012  B4 09		      C     mov ah, 9
+			      C     ;mov al, 'A'
+ 0014  B7 00		      C     mov bh, 0
+ 0016  B3 0F		      C     mov bl, 0fh
+ 0018  B9 0001		      C     mov cx, 1
+ 001B  CD 10		      C     int 10h
+ 001D  C3		      C     ret
+ 001E			      C PrintChar ENDP
+			      C 
+ 001E			      C HideCursor PROC
+ 001E  B4 03		      C     mov ah, 3
+ 0020  CD 10		      C     int 10h
+ 0022  80 CD 30		      C     or ch, 30h
+ 0025  B4 01		      C     mov ah, 1
+ 0027  CD 10		      C     int 10h
+ 0029  C3		      C     ret
+ 002A			      C HideCursor ENDP
+			      C 
+ 002A			      C ShowCursor PROC
+ 002A  B4 01		      C     mov ah, 1
+ 002C  B9 0607		      C     mov cx, 0607h
+ 002F  CD 10		      C     int 10h
+ 0031  C3		      C     ret
+ 0032			      C ShowCursor ENDP
+			      C 
+ 0032			      C GetMeToXY PROC
+ 0032  B4 02		      C     mov ah, 2
+			      C     ;mov dh, 10  ; row
+			      C     ;mov dl, 20  ; columns
+ 0034  B7 00		      C     mov bh, 0
+ 0036  CD 10		      C     int 10h
+ 0038  C3		      C     ret
+ 0039			      C GetMeToXY ENDP
+			      C 
+ 0039			      C WhereIsXY PROC
+ 0039  B4 03		      C     mov ah, 3h
+ 003B  B7 00		      C     mov bh, 0
+ 003D  CD 10		      C     int 10h
+			      C     ;return in dh (x), dl(y)
+ 003F  C3		      C     ret
+ 0040			      C WhereIsXY ENDP
+			      C 
+ 0040			      C PrintString PROC loc:WORD
+ 0043  8B 76 04		      C     mov si, loc
+ 0046			      C     l0:
+ 0046  80 3C 00		      C         cmp BYTE PTR [si], 0
+ 0049  74 10		      C         je return
+ 004B  8A 04		      C         mov al, [si]
+ 004D  E8 FFC2		      C         call PrintChar
+ 0050  46		      C         inc si
+ 0051  E8 FFE5		      C         call WhereIsXY
+ 0054  FE C2		      C         inc dl
+ 0056  E8 FFD9		      C         call GetMetoXY
+ 0059  EB EB		      C     jmp l0
+ 005B			      C     return:
+			      C     ret
+ 005F			      C PrintString ENDP
+			      C 
+ 005F			      C clear PROC
+ 005F  B8 0600		      C     mov ax, 0600h
+ 0062  B9 0000		      C     mov cx, 0
+ 0065  BA 184F		      C     mov dx, 184Fh
+ 0068  B7 07		      C     mov bh, 7
+ 006A  CD 10		      C     int 10h
+			      C     
+ 006C  B4 02		      C     mov ah, 2
+ 006E  B7 00		      C     mov bh, 0
+ 0070  BA 0000		      C     mov dx, 0
+ 0073  CD 10		      C     int 10h
+ 0075			      C clear ENDP
+			      C 
+ 0075			      C ReadPX PROC
+ 0075  B4 0D		      C     mov ah, 0Dh
+ 0077  B7 00		      C     mov bh, 0
+			      C     ;mov cx, 100  ;x
+			      C     ;mov dx, 100  ;y
+ 0079  CD 10		      C     int 10h
+			      C     ; result in al
+ 007B  C3		      C     ret
+ 007C			      C ReadPX ENDP
+			      C 
+ 007C			      C VerticalLine PROC
+ 007C			      C     l0:
+ 007C  E8 FF86		      C         call PrintPX
+ 007F  4A		      C         dec dx
+ 0080  48		      C         dec ax
+ 0081  83 F8 00		      C     cmp ax, 0
+ 0084  7F F6		      C     jg l0
+ 0086  C3		      C     ret
+ 0087			      C VerticalLine ENDP
+			      C 
+ 0087			      C HorizontalLine PROC
+ 0087			      C     l0:
+ 0087  E8 FF7B		      C         call PrintPX
+ 008A  41		      C         inc cx
+ 008B  48		      C         dec ax
+ 008C  83 F8 00		      C     cmp ax, 0
+ 008F  7F F6		      C     jg l0
+ 0091  C3		      C     ret
+ 0092			      C HorizontalLine ENDP
+			      C 
+ 0092			      C Square PROC x:WORD, y:WORD, s:WORD
+ 0095  8B 46 08		      C     mov ax, s     ; loop
+ 0098  8B 4E 04		      C     mov cx, x       ; x
+ 009B  8B 56 06		      C     mov dx, y       ; y
+ 009E  E8 FFE6		      C     call HorizontalLine
+			      C     
+ 00A1  8B 46 08		      C     mov ax, s      ; loop
+ 00A4  8B 4E 04		      C     mov cx, x       ; cx = x
+ 00A7  8B 56 06		      C     mov dx, y       ; y
+ 00AA  E8 FFCF		      C     call VerticalLine
+			      C     
+ 00AD  8B 46 08		      C     mov ax, s      ; loop
+ 00B0  8B 4E 04		      C     mov cx, x       ; x
+ 00B3  8B 56 06		      C     mov dx, y       ; y
+ 00B6  03 4E 08		      C     add cx, s
+ 00B9  E8 FFC0		      C     call VerticalLine
+			      C     
+ 00BC  8B 46 08		      C     mov ax, s      ; loop
+ 00BF  8B 4E 04		      C     mov cx, x       ; x
+ 00C2  8B 56 06		      C     mov dx, y       ; y
+ 00C5  2B 56 08		      C     sub dx, s
+ 00C8  E8 FFBC		      C     call HorizontalLine
+			      C     
+			      C     ret
+ 00CF			      C Square ENDP
+			      C 
+ 00CF			      C ScrollUp PROC 
+ 00CF  B4 06		      C     mov ah, 6h  ; scroll window up
+ 00D1  B0 00		      C     mov al, 0   ; entire window
+ 00D3  B5 00		      C     mov ch, 0   ; upper left row
+ 00D5  B1 00		      C     mov cl, 0   ; upper left column
+ 00D7  B6 18		      C     mov dh, 24  ; lower right row
+ 00D9  B2 4F		      C     mov dl, 79  ; lower right column
+ 00DB  B7 07		      C     mov bh, 7   ; attribute for blanked area
+ 00DD  CD 10		      C     int 10h
+ 00DF  C3		      C     ret
+ 00E0			      C ScrollUp ENDP
+			      C 
+ 00E0			      C ScrollDown PROC 
+ 00E0  B4 07		      C     mov ah, 7h   ; scroll window up
+ 00E2  B0 00		      C     mov al, 0   ; entire window
+ 00E4  B5 00		      C     mov ch, 0   ; upper left row
+ 00E6  B1 00		      C     mov cl, 0   ; upper left column
+ 00E8  B6 18		      C     mov dh, 24  ; lower right row
+ 00EA  B2 4F		      C     mov dl, 79  ; lower right column
+ 00EC  B7 07		      C     mov bh, 7   ; attribute for blanked area
+ 00EE  CD 10		      C     int 10h
+ 00F0  C3		      C     ret
+ 00F1			      C ScrollDown ENDP
+			      C 
+			      C ; Reference http://fleder44.net/312/notes/16Files/Index.html
+			      C ; Reference http://jlp.freeservers.com/files/
+ 00F1			      C CreateFile PROC, fileName:PTR BYTE
+ 00F4  B4 3C		      C 	mov ah,3Ch 
+ 00F6  B9 0000		      C     mov cx,00000000b 
+ 00F9  8B 56 04		      C     mov dx, fileName
+ 00FC  CD 21		      C     int 21h 
+ 00FE  0F 82 018B	      C     jc quit
+			      C 	; Just close it for now. May causing performance issue.
+ 0102  8B D8		      C 	mov bx,ax
+ 0104  B4 3E		      C 	mov ah,3Eh
+ 0106  CD 21		      C 	int 21h
+			      C 	ret
+ 010C			      C quit:
+			      C 	mWrite "Write Failed"
+ 0000			     1C 	.data				
+ 0000 57 72 69 74 65 20	     1C 	??0000 BYTE "Write Failed",0		
+       46 61 69 6C 65 64
+       00
+ 010C			     1C 	.code
+ 010C  66| 52		     1C 	push edx
+ 010E  66| BA 00000000 R     1C 	mov  edx,OFFSET ??0000
+ 0114  E8 0000 E	     1C 	call Writestring
+ 0117  66| 5A		     1C 	pop  edx
+			      C 	ret
+ 011D			      C CreateFile ENDP
+			      C 
+ 011D			      C ReadFile PROC, fileName:PTR BYTE, buffer:PTR BYTE, bufferSize:WORD
+			      C 	LOCAL fileHandle:WORD
+			      C 	;; open an input file for reading
+ 0123  B4 3D		      C 	mov ah,3Dh
+ 0125  B0 00		      C 	mov al,0
+ 0127  8B 56 04		      C 	mov dx, fileName
+ 012A  CD 21		      C 	int 21h
+			      C 	; Error occur if CF is set
+ 012C  0F 82 015D	      C 	jc quit
+ 0130  89 46 FE		      C 	mov fileHandle,ax
+			      C 	
+			      C 	; read from the file
+ 0133  B4 3F		      C 	mov ah, 3Fh
+ 0135  8B 5E FE		      C 	mov bx, fileHandle
+ 0138  8B 4E 08		      C 	mov cx, bufferSize
+ 013B  8B 56 06		      C 	mov dx, buffer
+ 013E  CD 21		      C 	int 21h
+ 0140  0F 82 0149	      C 	jc quit
+			      C 	
+			      C 	;close the file
+ 0144  B4 3E		      C 	mov ah,3Eh
+ 0146  8B 5E FE		      C 	mov bx,fileHandle
+ 0149  CD 21		      C 	int 21h
+			      C 	ret
+ 0151			      C quit:
+			      C 	mWriteLn "Read file Failed"
+ 000D			     2C 	.data				
+ 000D 52 65 61 64 20 66	     2C 	??0001 BYTE "Read file Failed",0		
+       69 6C 65 20 46 61
+       69 6C 65 64 00
+ 0151			     2C 	.code
+ 0151  66| 52		     2C 	push edx
+ 0153  66| BA 0000000D R     2C 	mov  edx,OFFSET ??0001
+ 0159  E8 0000 E	     2C 	call Writestring
+ 015C  66| 5A		     2C 	pop  edx
+ 015E  E8 0000 E	     1C 	call Crlf
+			      C 	ret
+ 0167			      C ReadFile ENDP
+			      C 
+ 0167			      C WriteFile PROC, fileName:PTR BYTE, buffer:PTR BYTE, bufferSize:WORD
+			      C 	LOCAL fileHandle:WORD
+			      C 	; open an input file for reading
+ 016D  B4 3D		      C 	mov ah,3Dh
+ 016F  B0 01		      C 	mov al,1	; 0 Read, 1 Write, 2 Read/Write
+ 0171  8B 56 04		      C 	mov dx, fileName
+ 0174  CD 21		      C 	int 21h
+			      C 	; Error occur if CF is set
+ 0176  0F 82 0113	      C 	jc quit
+ 017A  89 46 FE		      C 	mov fileHandle,ax
+			      C 	
+			      C 	; Write in file
+ 017D  B4 40		      C 	mov ah,40h 
+ 017F  8B 5E FE		      C     mov bx, fileHandle
+ 0182  8B 4E 08		      C     mov cx, bufferSize
+ 0185  8B 56 06		      C     mov dx, buffer 
+ 0188  CD 21		      C     int 21h 
+ 018A  0F 82 00FF	      C     jc quit
+			      C 	
+			      C 	;close the file
+ 018E  B4 3E		      C 	mov ah,3Eh
+ 0190  8B 5E FE		      C 	mov bx,fileHandle
+ 0193  CD 21		      C 	int 21h
+			      C 	ret
+ 019B			      C quit:
+			      C 	mWriteLn "Write failed"
+ 001E			     2C 	.data				
+ 001E 57 72 69 74 65 20	     2C 	??0002 BYTE "Write failed",0		
+       66 61 69 6C 65 64
+       00
+ 019B			     2C 	.code
+ 019B  66| 52		     2C 	push edx
+ 019D  66| BA 0000001E R     2C 	mov  edx,OFFSET ??0002
+ 01A3  E8 0000 E	     2C 	call Writestring
+ 01A6  66| 5A		     2C 	pop  edx
+ 01A8  E8 0000 E	     1C 	call Crlf
+			      C 	ret
+ 01B1			      C WriteFile ENDP
+			      C 
+ 01B1			      C DeleteFile PROC, fileName:PTR BYTE
+ 01B4  B4 41		      C     mov ah,41h 
+ 01B6  8D 56 04		      C     lea dx, fileName
+ 01B9  CD 21		      C     int 21h 
+ 01BB  0F 82 00CE	      C     jc quit
+ 01BF			      C quit:
+			      C 	mWriteLn "Delete file failed"
+ 002B			     2C 	.data				
+ 002B 44 65 6C 65 74 65	     2C 	??0003 BYTE "Delete file failed",0		
+       20 66 69 6C 65 20
+       66 61 69 6C 65 64
+       00
+ 01BF			     2C 	.code
+ 01BF  66| 52		     2C 	push edx
+ 01C1  66| BA 0000002B R     2C 	mov  edx,OFFSET ??0003
+ 01C7  E8 0000 E	     2C 	call Writestring
+ 01CA  66| 5A		     2C 	pop  edx
+ 01CC  E8 0000 E	     1C 	call Crlf
+			      C 	ret
+ 01D3			      C DeleteFile ENDP
+			      C 
+			      C ; Derived from irvine16.inc
+			      C startup MACRO
+			      C     mov  ax,@data
+			      C     mov  ds,axENDM
+			      C 
+			      C .LIST
+			      C 
+			      C 
+				include macros.inc
+			      C .NOLIST
+			      C 
+			      C 
+
+ 003E				.data
+ = 001B				ESCKEY = 1Bh
+ 003E 50 72 65 73 73 20		Greeting BYTE "Press ESC to Quit",0
+       45 53 43 20 74 6F
+       20 51 75 69 74 00
+ 0050 4C 65 66 74 20 42		StatusLine BYTE "Left Button"
+       75 74 74 6F 6E
+ 005B  4D 6F 75 73 65 20	BYTE "Mouse Position",0
+       50 6F 73 69 74 69
+       6F 6E 00
+ 006A 20 20 20 20 20 20		Blanks BYTE "             ",0
+       20 20 20 20 20 20
+       20 00
+ 0078 0000			Xcoordinate WORD 0   
+ 007A 0000			Ycoordinate WORD 0   
+ 007C 0000			Xclick WORD 0     
+ 007E 0000			YClick WORD 0
+ 0080 63			QP BYTE 99
+ 0081 4C 6F 61 64 69 6E		Load1 byte "Loading...",0
+       67 2E 2E 2E 00
+ 008C 0000			temp1 WORD 0
+ 008E 45 6E 74 65 72 20		pla byte "Enter Name of PLAYER : " , 0
+       4E 61 6D 65 20 6F
+       66 20 50 4C 41 59
+       45 52 20 3A 20 00
+				;========================================
+
+ 00A6  0032 [			user BYTE 50 DUP (?)
+        00
+       ]
+ 00D8 46 69 6C 65 44 61		File BYTE "FileData.txt",0
+       74 61 2E 74 78 74
+       00
+
+ 00E5 00 00 00 00 00 00		shape  db 0,0,0,0,0,0,0,0
+       00 00
+ 00ED 0E 21 0E 22 0E 23		Nshape db 14,33,14,34,14,35,14,36
+       0E 24
+
+ 00F5 00			counter db 0
+ 00F6 00			temporary db ?
+ 00F7 00			row db 0
+
+ 00F8 0000			sad dw 0
+ 00FA 2A 20 20 20 20 20		border db '*                          ****************', 0Dh,0ah	;board of game
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 0D 0A
+ 0127  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0154  2A 20 20 20 20 20	       db '*                          *    SCORES    *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 53 43 4F 52
+       45 53 20 20 20 20
+       2A 0D 0A
+ 0181  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 01AE  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 01DB  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0208  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0235  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0262  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 028F  2A 20 20 20 20 20	       db '*                          ****************', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 0D 0A
+ 02BC  2A 20 20 20 20 20	       db '*                          * pause: P     *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 70
+       61 75 73 65 3A 20
+       50 20 20 20 20 20
+       2A 0D 0A
+ 02E9  2A 20 20 20 20 20	       db '*                          * Quit:  Q     *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 51
+       75 69 74 3A 20 20
+       51 20 20 20 20 20
+       2A 0D 0A
+ 0316  2A 20 20 20 20 20	       db '*                          *  NEXT SHAPE  *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       4E 45 58 54 20 53
+       48 41 50 45 20 20
+       2A 0D 0A
+ 0343  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0370  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 039D  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 03CA  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 03F7  2A 20 20 20 20 20	       db '*                          *              *', 0Dh,0ah
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       20 20 20 2A 20 20
+       20 20 20 20 20 20
+       20 20 20 20 20 20
+       2A 0D 0A
+ 0424  2A 2A 2A 2A 2A 2A	       db '*******************************************', 0Dh,0ah, '$'
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 2A 2A 2A 2A 2A
+       2A 0D 0A 24
+
+ 0452 00			pause1 db 0 
+ 0453 00			random db ?         ;for random vales to select shape  
+ 0454 0000			scores dw 0         ;to store scores
+ 0456 00			scancode db 0       ; scan code Varriable
+ 0457 00			hrs db 0            ;Delay1
+ 0458 00			mins db 0           ;Delay1
+ 0459 00			secs db  0          ;Delay1
+ 045A 54 65 74 72 69 73		string1 db "Tetris Game",0
+       20 47 61 6D 65 00
+ 0466 47 61 6D 65 20 4F		string2 db "Game Over",0
+       76 65 72 00
+				 
+ 0470 01 0B 01 0C 02 0C		shape1 db 1,11,1,12,2,12,2,13		;arrays to store shapes
+       02 0D
+ 0478 00 0C 01 0B 01 0C		shape2 db 0,12,1,11,1,12,2,11
+       02 0B
+ 0480 00 0C 00 0D 01 0B		shape3 db 0,12,0,13,1,11,1,12
+       01 0C
+ 0488 00 0B 01 0B 01 0C		shape4 db 0,11,1,11,1,12,2,12
+       02 0C
+ 0490 00 0B 00 0C 00 0D		shape5 db 0,11,0,12,0,13,0,14
+       00 0E
+ 0498 01 0C 02 0C 03 0C		shape6 db 1,12,2,12,3,12,4,12
+       04 0C
+ 04A0 01 0B 01 0C 01 0D		shape7 db 1,11,1,12,1,13,0,13
+       00 0D
+ 04A8 01 0C 02 0C 03 0C		shape8 db 1,12,2,12,3,12,3,13
+       03 0D
+ 04B0 01 0B 00 0B 00 0C		shape9 db 1,11,0,11,0,12,0,13
+       00 0D
+ 04B8 00 0C 00 0D 01 0D		shape10 db 0,12,0,13,1,13,2,13
+       02 0D
+ 04C0 00 0B 01 0B 01 0C		shape11 db 0,11,1,11,1,12,1,13
+       01 0D
+ 04C8 00 0D 01 0D 02 0D		shape12 db 0,13,1,13,2,13,2,13
+       02 0D
+ 04D0 00 0B 00 0C 00 0D		shape13 db 0,11,0,12,0,13,1,13
+       01 0D
+ 04D8 00 0D 00 0C 01 0C		shape14 db 0,13,0,12,1,12,2,12
+       02 0C
+ 04E0 00 0C 01 0B 01 0C		shape15 db 0,12,1,11,1,12,1,13
+       01 0D
+ 04E8 00 0C 01 0C 01 0D		shape16 db 0,12,1,12,1,13,2,12
+       02 0C
+ 04F0 00 0C 01 0C 01 0B		shape17 db 0,12,1,12,1,11,2,12
+       02 0C
+ 04F8 00 0B 00 0C 00 0D		shape18 db 0,11,0,12,0,13,1,12
+       01 0C
+ 0500 00 0B 00 0C 01 0B		shape19 db 0,11,0,12,1,11,1,12
+       01 0C
+				;==============================================
+
+ 0508 20 21 21 21 2E 2E		game byte " !!!.......GAME.......!!!",0
+       2E 2E 2E 2E 2E 47
+       41 4D 45 2E 2E 2E
+       2E 2E 2E 2E 21 21
+       21 00
+ 0522 20 41 53 53 45 4D		project byte " ASSEMBLY PROJECT : ",0
+       42 4C 59 20 50 52
+       4F 4A 45 43 54 20
+       3A 20 00
+ 0537 20 54 45 54 52 49		project_name byte " TETRIS ",0
+       53 20 00
+ 0540 20 47 52 4F 55 50		member byte " GROUP MEMBERS : ",0
+       20 4D 45 4D 42 45
+       52 53 20 3A 20 00
+ 0552 20 31 29 2D 20 53		member_1 byte " 1)- Saad Irfan ",0
+       61 61 64 20 49 72
+       66 61 6E 20 00
+ 0563 20 32 29 2D 20 4A		member_2 byte " 2)- Junaid Muhammad ",0
+       75 6E 61 69 64 20
+       4D 75 68 61 6D 6D
+       61 64 20 00
+ 0579 20 53 55 42 4D 49		submit byte " SUBMITTED TO : ",0
+       54 54 45 44 20 54
+       4F 20 3A 20 00
+ 058A 20 53 49 52 20 54		sir byte " SIR TEHSEEN KHAN ",0
+       45 48 53 45 45 4E
+       20 4B 48 41 4E 20
+       00
+ 059D 0000			temp word 0
+				;--------------------------------------------------------------------------------------------------------------------------------------------
+
+ 01D3				.code       
+				                                        
+
+ 01D3				main proc
+ 01D3  B8 ---- R		mov ax,@data
+ 01D6  8E D8			mov ds,ax
+
+ 01D8  E8 06A2				call video_mode_selection		;video selection mode
+
+ 01DB  E8 09EB				call Madeby			;displaying content
+ 01DE  E8 06BB				call delay1
+ 01E1  E8 06B8				call delay1
+ 01E4  E8 0000 E			call clrscr
+ 01E7  B4 00				mov ah,0
+ 01E9  B0 10			mov al,10h
+ 01EB  CD 10			int 10h
+
+ 01ED  E8 022D				call main2
+ 01F0				GAME3::
+ 01F0  E8 0000 E		call clrscr
+ 01F3  B4 00			mov ah,0
+ 01F5  B0 10			mov al,10h
+ 01F7  CD 10			int 10h
+				;-------------------------------------------------------------------------
+ 01F9  B9 0018						mov cx,lengthof pla       ;mov dx, offset project
+ 01FC  49				        dec cx
+ 01FD  BE 0000						mov si, 0						   ;call writestring
+ 0200  B2 07						mov dl, 7
+							
+ 0202				lable_:
+ 0202  B4 02					mov ah,2                               ;gotoxy
+ 0204  B6 05					mov dh,5	                           ;row
+ 0206  B7 00					mov bh,0                               ;video page
+ 0208  CD 10					int 10h
+ 020A  89 0E 059D R				mov temp , cx
+ 020E  B4 09					mov ah, 9                              ;Function
+ 0210  8A 84 008E R				mov al, pla[si]                        ;Assign value
+ 0214  B7 00					mov bh, 0                              ;Vedio page
+ 0216  B3 0A					mov bl, 0ah                            ;For Color
+ 0218  B9 0001					mov cx, 1                              ;Loop
+ 021B  CD 10					int 10h                                ;interrupts
+ 021D  FE C2					inc dl 		                           ;inc col
+ 021F  46					inc si                              ;show var
+ 0220  8B 0E 059D R				mov cx, temp
+ 0224  B8 0064					mov ax, 100
+ 0227  E8 0000 E				call Delay
+ 022A  E2 D6			loop lable_
+				;------------------------------------------------------------------
+				invoke CreateFile, ADDR File
+				;------------------------------------------------------------------
+ 0232  BE 00A6 R		mov si , offset user
+ 0235  B9 0032			mov cx , sizeof user
+ 0238				qwer:
+ 0238  B4 10			mov ah , 10h
+ 023A  B3 0A			mov bl , 0ah
+ 023C  CD 16			int 16h
+ 023E  3C 0D			cmp al , 0dh
+ 0240  74 08			je qwert
+ 0242  E8 0000 E		call writechar
+ 0245  88 04			mov [si], al
+ 0247  46			inc si
+ 0248  E2 EE			loop qwer
+ 024A				qwert:
+				;------------------------------------------------------------------
+				invoke WriteFile,ADDR File,ADDR user,SIZEOF user
+				.if QP==1
+ 025C  EB 09			jmp GAME1
+				.endif
+				.if QP==2
+ 0265  EB 26			jmp QUIT
+				.endif
+
+ 0267					GAME1::
+ 0267  E8 031B				call main3
+ 026A  E8 0000 E			call clrscr
+ 026D  B4 00				mov ah,0
+ 026F  B0 10				mov al,10h
+ 0271  CD 10				int 10h
+ 0273  E8 060E				call draw_border ;for border for first time
+
+ 0276  E8 0623				call Delay1
+				       
+ 0279  E8 06AF			        call select_shape 			;select random shape
+				 
+
+ 027C				gam:
+				     
+ 027C  E8 0347				call move_shape_to_board 			;more shape charecter to board
+
+ 027F  E8 0602				call draw_border
+					
+ 0282  E8 0617				call Delay1
+
+ 0285  E8 0396				call disappear_shape
+
+					
+
+ 0288  E8 0526				call check_update_D			;check shape down coordinttes then move down shape if space availble
+
+ 028B  EB EF			jmp gam
+
+ 028D				QUIT::
+				;-----------------------------------
+ 028D  B4 4C			mov ah,4ch
+ 028F  CD 21			int 21h
+ 0291				main endp
+				;------------------------------------------------------------------------------------------------
+				;mouse codes
+
+ 0291				Wall1 PROC
+ 0291  60				pusha
+ 0292  B4 02				mov ah,2
+ 0294  B7 00				mov bh,0
+ 0296  CD 10				int 10h
+ 0298  B4 09				mov ah,9
+ 029A  B7 00				mov bh,0
+ 029C  B3 0D				mov bl,0Dh
+ 029E  B9 0001				mov cx,1
+ 02A1  CD 10				int 10h
+ 02A3  61				popa
+ 02A4  C3			ret
+ 02A5				Wall1 ENDP
+
+ 02A5				gotoxy2 PROC
+ 02A5  60				pusha
+ 02A6  B4 02				mov ah,2
+ 02A8  B7 00				mov bh,0
+ 02AA  CD 10				int 10h
+ 02AC  61				popa
+ 02AD  C3			ret
+ 02AE				gotoxy2 ENDP
+
+ 02AE				main1 PROC
+ 02AE  B2 17				mov dl,23
+ 02B0  66| B9 0000001F			mov ecx,31
+ 02B6					l1:
+ 02B6  B0 B2					mov al,178
+ 02B8  B6 06					mov dh,6
+ 02BA  E8 FFD4					call Wall1
+ 02BD  66| 52					push edx
+ 02BF  66| 51					push ecx
+ 02C1  66| 50					push eax
+ 02C3  B8 000A					mov ax,10
+ 02C6  E8 0000 E				call delay
+ 02C9  66| 58					pop eax
+ 02CB  66| 59					pop ecx
+ 02CD  66| 5A					pop edx
+ 02CF  FE C2					inc dl
+ 02D1  E2 E3				LOOP l1
+ 02D3  B6 06				mov dh,6
+ 02D5  66| B9 00000012			mov ecx,18
+ 02DB					l2:
+ 02DB  B2 36					mov dl,54
+ 02DD  E8 FFB1					call Wall1
+						;call writechar
+ 02E0  66| 52					push edx
+ 02E2  66| 51					push ecx
+ 02E4  66| 50					push eax
+ 02E6  B8 000A					mov ax,10
+ 02E9  E8 0000 E				call delay
+ 02EC  66| 58					pop eax
+ 02EE  66| 59					pop ecx
+ 02F0  66| 5A					pop edx
+ 02F2  FE C6					inc dh
+ 02F4  E2 E5				LOOP l2
+ 02F6  B2 37				mov dl,55
+ 02F8  66| B9 0000001F			mov ecx,31
+ 02FE					l3:
+ 02FE  B6 16					mov dh,22
+ 0300  E8 FF8E					call Wall1
+						;call writechar
+ 0303  66| 52					push edx
+ 0305  66| 51					push ecx
+ 0307  66| 50					push eax
+ 0309  B8 000A					mov ax,10
+ 030C  E8 0000 E				call delay
+ 030F  66| 58					pop eax
+ 0311  66| 59					pop ecx
+ 0313  66| 5A					pop edx
+ 0315  FE CA					dec dl
+ 0317  E2 E5				LOOP l3
+ 0319  B6 16				mov dh,22
+ 031B  66| B9 00000012			mov ecx,18
+ 0321					l4:
+ 0321  B2 18					mov dl,24
+ 0323  E8 FF6B					call Wall1
+						;call writechar
+ 0326  66| 52					push edx
+ 0328  66| 51					push ecx
+ 032A  66| 50					push eax
+ 032C  B8 000A					mov ax,10
+ 032F  E8 0000 E				call delay
+ 0332  66| 58					pop eax
+ 0334  66| 59					pop ecx
+ 0336  66| 5A					pop edx
+ 0338  FE CE					dec dh
+ 033A  E2 E5				LOOP l4
+
+ 033C  B6 04				mov dh,4
+ 033E  B2 1C				mov dl,28
+ 0340  E8 FF62				call gotoxy2
+					;mov eax,0Ch
+					;call settextcolor
+					mwrite"WELCOME TO TETRIS GAME"
+ 059F			     1		.data				
+ 059F 57 45 4C 43 4F 4D	     1		??0004 BYTE "WELCOME TO TETRIS GAME",0		
+       45 20 54 4F 20 54
+       45 54 52 49 53 20
+       47 41 4D 45 00
+ 0343			     1		.code
+ 0343  66| 52		     1		push edx
+ 0345  66| BA 0000059F R     1		mov  edx,OFFSET ??0004
+ 034B  E8 0000 E	     1		call Writestring
+ 034E  66| 5A		     1		pop  edx
+					
+					;mov eax,0F4h
+					;call settextcolor
+					
+ 0350  B6 0A				mov dh,10
+ 0352  B2 1E				mov dl,30
+ 0354  E8 FF4E				call gotoxy2
+					mwrite"|                |"
+ 05B6			     1		.data				
+ 05B6 7C 20 20 20 20 20	     1		??0005 BYTE "|                |",0		
+       20 20 20 20 20 20
+       20 20 20 20 20 7C
+       00
+ 0357			     1		.code
+ 0357  66| 52		     1		push edx
+ 0359  66| BA 000005B6 R     1		mov  edx,OFFSET ??0005
+ 035F  E8 0000 E	     1		call Writestring
+ 0362  66| 5A		     1		pop  edx
+ 0364  B6 0B				mov dh,11
+ 0366  B2 1E				mov dl,30
+ 0368  E8 FF3A				call gotoxy2
+					mwrite"|                |"
+ 05C9			     1		.data				
+ 05C9 7C 20 20 20 20 20	     1		??0006 BYTE "|                |",0		
+       20 20 20 20 20 20
+       20 20 20 20 20 7C
+       00
+ 036B			     1		.code
+ 036B  66| 52		     1		push edx
+ 036D  66| BA 000005C9 R     1		mov  edx,OFFSET ??0006
+ 0373  E8 0000 E	     1		call Writestring
+ 0376  66| 5A		     1		pop  edx
+ 0378  B6 0C				mov dh,12
+ 037A  B2 1E				mov dl,30
+ 037C  E8 0000 E			call gotoxy
+					mwrite"|                |"
+ 05DC			     1		.data				
+ 05DC 7C 20 20 20 20 20	     1		??0007 BYTE "|                |",0		
+       20 20 20 20 20 20
+       20 20 20 20 20 7C
+       00
+ 037F			     1		.code
+ 037F  66| 52		     1		push edx
+ 0381  66| BA 000005DC R     1		mov  edx,OFFSET ??0007
+ 0387  E8 0000 E	     1		call Writestring
+ 038A  66| 5A		     1		pop  edx
+					
+ 038C  B6 11				mov dh,17
+ 038E  B2 21				mov dl,33
+ 0390  E8 FF12				call gotoxy2
+					mwrite"|          |"
+ 05EF			     1		.data				
+ 05EF 7C 20 20 20 20 20	     1		??0008 BYTE "|          |",0		
+       20 20 20 20 20 7C
+       00
+ 0393			     1		.code
+ 0393  66| 52		     1		push edx
+ 0395  66| BA 000005EF R     1		mov  edx,OFFSET ??0008
+ 039B  E8 0000 E	     1		call Writestring
+ 039E  66| 5A		     1		pop  edx
+ 03A0  B6 12				mov dh,18
+ 03A2  B2 21				mov dl,33
+ 03A4  E8 FEFE				call gotoxy2
+					mwrite"|          |"
+ 05FC			     1		.data				
+ 05FC 7C 20 20 20 20 20	     1		??0009 BYTE "|          |",0		
+       20 20 20 20 20 7C
+       00
+ 03A7			     1		.code
+ 03A7  66| 52		     1		push edx
+ 03A9  66| BA 000005FC R     1		mov  edx,OFFSET ??0009
+ 03AF  E8 0000 E	     1		call Writestring
+ 03B2  66| 5A		     1		pop  edx
+ 03B4  B6 13				mov dh,19
+ 03B6  B2 21				mov dl,33
+ 03B8  E8 FEEA				call gotoxy2
+					mwrite"|          |"
+ 0609			     1		.data				
+ 0609 7C 20 20 20 20 20	     1		??000A BYTE "|          |",0		
+       20 20 20 20 20 7C
+       00
+ 03BB			     1		.code
+ 03BB  66| 52		     1		push edx
+ 03BD  66| BA 00000609 R     1		mov  edx,OFFSET ??000A
+ 03C3  E8 0000 E	     1		call Writestring
+ 03C6  66| 5A		     1		pop  edx
+					
+ 03C8  B2 1E				mov dl,30
+ 03CA  66| B9 00000012			mov ecx,18
+ 03D0					L:
+ 03D0  B0 2D					mov al,'-'
+ 03D2  B6 09					mov dh,9
+ 03D4  E8 FEBA					call Wall1
+ 03D7  B6 0D					mov dh,13
+ 03D9  E8 FEB5					call Wall1
+						.if dl>32 && dl<45
+ 03E6  B6 10					mov dh,16
+ 03E8  E8 FEA6					call Wall1
+ 03EB  B6 14					mov dh,20
+ 03ED  E8 FEA1					call Wall1
+						.endif
+ 03F0  FE C2				INC dl
+ 03F2  E2 DC				LOOP L
+ 03F4  B6 0B				mov dh,11
+ 03F6  B2 24				mov dl,36
+ 03F8  E8 FEAA				call gotoxy2
+					;mov eax,0F9h
+					;call settextcolor
+					mwrite" PLAY "
+ 0616			     1		.data				
+ 0616 20 50 4C 41 59 20	     1		??000B BYTE " PLAY ",0		
+       00
+ 03FB			     1		.code
+ 03FB  66| 52		     1		push edx
+ 03FD  66| BA 00000616 R     1		mov  edx,OFFSET ??000B
+ 0403  E8 0000 E	     1		call Writestring
+ 0406  66| 5A		     1		pop  edx
+
+ 0408  B6 12				mov dh,18
+ 040A  B2 24				mov dl,36
+ 040C  E8 FE96				call gotoxy2
+					;mov eax,0F9h
+					;call settextcolor
+					mwrite" EXIT "
+ 061D			     1		.data				
+ 061D 20 45 58 49 54 20	     1		??000C BYTE " EXIT ",0		
+       00
+ 040F			     1		.code
+ 040F  66| 52		     1		push edx
+ 0411  66| BA 0000061D R     1		mov  edx,OFFSET ??000C
+ 0417  E8 0000 E	     1		call Writestring
+ 041A  66| 5A		     1		pop  edx
+					
+ 041C  C3			ret
+ 041D				main1 ENDP
+ 041D				main2 PROC
+				;==================================
+ 041D  E8 0001			call get_value
+ 0420  C3			ret
+ 0421				main2 ENDP
+				;================================
+ 0421				get_value proc
+ 0421  E8 FE8A			call main1
+ 0424  E8 002E			Call HideCursor11
+ 0427  E8 004B			Call ShowMousePointer
+ 042A				L1: 
+ 042A  E8 00D9			Call ShowMousePosition
+ 042D  E8 004D			Call LeftButtonClick    
+ 0430  B4 11			mov ah,11h
+ 0432  CD 16			int 16h
+ 0434  74 08			jz l2
+ 0436  B4 10			mov ah,10h
+ 0438  CD 16			int 16h
+ 043A  3C 1B			cmp al,ESCKEY
+ 043C  74 02			je Quit1
+ 043E  EB EA			L2: jmp L1
+ 0440  E8 002A			Quit1: Call HideMousePointer
+ 0443  E8 001B			Call ShowCursor11
+ 0446  E8 0000 E		Call ClrScr
+ 0449  E8 0000 E		Call waitmsg
+				;================================
+ 044C  C3			ret
+ 044D				get_value endp
+
+				;================================
+ 044D				GetMousePosition PROC
+ 044D  50			push ax
+ 044E  B8 0003			mov ax,3
+ 0451  CD 33			int 33h
+ 0453  58			pop ax
+ 0454  C3			ret
+ 0455				GetMousePosition ENDP
+				;===============================
+ 0455				HideCursor11 PROC
+ 0455  B4 03			mov ah,3
+ 0457  CD 10			int 10h
+ 0459  80 CD 30			or ch,30h
+ 045C  B4 01			mov ah,1
+ 045E  CD 10			int 10h
+ 0460  C3			ret
+ 0461				HideCursor11 ENDP
+				;===============================
+ 0461				ShowCursor11 PROC
+ 0461  B4 03			mov ah,3
+ 0463  CD 0A			int 10 
+ 0465  B4 01			mov ah,1
+ 0467  B9 0607			mov cx,0607h
+ 046A  CD 10			int 10h
+ 046C  C3			ret
+ 046D				ShowCursor11 ENDP
+				;===============================
+ 046D				HideMousePointer PROC
+ 046D  50			push ax
+ 046E  B8 0002			mov ax,2
+ 0471  CD 33			int 33h
+ 0473  58			pop ax
+ 0474  C3			ret
+ 0475				HideMousePointer ENDP
+				;==============================
+ 0475				ShowMousePointer PROC
+ 0475  50			push ax
+ 0476  B8 0001			mov ax,1
+ 0479  CD 33			int 33h
+ 047B  58			pop ax
+ 047C  C3			ret
+ 047D				ShowMousePointer ENDP
+				;===============================
+ 047D				LeftButtonClick PROC
+ 047D  60			pusha
+ 047E  B4 00			mov ah,0
+ 0480  B0 05			mov al,5
+ 0482  BB 0000			mov bx,0
+ 0485  CD 33			int 33h
+				;-----------------------------------
+ 0487  83 E0 01			and ax,1
+				.if ax==1
+				.IF ( cx>244 && cx<380 ) && (dx>135 && dx<185)
+ 04A7  C6 06 0080 R 01		mov QP,1
+ 04AC  E9 FD41			jmp GAME3
+				.endif
+
+				.IF ( cx>266 && cX<357 ) && (dx>234 && dx<280)
+ 04C7  C6 06 0080 R 02		mov QP,2
+ 04CC  E9 FDBE			jmp QUIT
+ 04CF  C3			ret
+				.endif
+				.endif
+ 04D0  3B 0E 007C R		cmp cx,Xclick
+ 04D4  75 06			jne lbc1
+ 04D6  3B 1E 007E R		cmp bx,Yclick
+ 04DA  74 22			je lbc_exit
+ 04DC				LBC1:
+ 04DC  89 0E 007C R		mov Xclick,cx
+ 04E0  89 16 007E R		mov Yclick,dx
+ 04E4  B6 18			mov dh,24
+ 04E6  B2 0F			mov dl,15
+ 04E8  E8 0000 E		call gotoxy
+ 04EB  52			push dx
+ 04EC  BA 006A R		mov dx, OFFSET Blanks
+				;Call WriteString
+ 04EF  5A			pop dx
+ 04F0  E8 0000 E		Call Gotoxy
+ 04F3  A1 0078 R		mov ax,Xcoordinate
+				;Call Writedec
+ 04F6  B2 14			mov dl,20
+ 04F8  E8 0000 E		call gotoxy
+ 04FB  A1 007A R		mov ax,ycoordinate
+				;call writedec
+ 04FE				lbc_exit:
+ 04FE  61			popa
+ 04FF  C3			ret
+ 0500				leftButtonClick ENDP
+				;=================================
+ 0500				SETMousePosition PRoc
+ 0500  B8 0004			mov ax,4
+ 0503  CD 33			int 33h
+ 0505  C3			ret
+
+ 0506				SetMousePosition ENDP
+				;=================================
+ 0506				ShowMousePosition PROC
+
+ 0506  60			pusha
+ 0507  E8 FF43			Call GetMousePosition
+ 050A  3B 0E 0078 R		cmp cx,xcoordinate
+ 050E  75 06			jne smp1
+ 0510  3B 16 007A R		cmp dx,ycoordinate
+ 0514  74 22			je smp_exit
+ 0516  89 0E 0078 R		smp1: mov xcoordinate,cx
+ 051A  89 16 007A R		mov ycoordinate,dx
+ 051E  B6 18			mov dh,24
+ 0520  B2 3C			mov dl,60
+ 0522  E8 0000 E		Call gotoxy
+ 0525  52			push dx
+ 0526  BA 006A R		mov dx, OFFSET Blanks
+				;Call WriteString
+ 0529  5A			pop dx
+ 052A  E8 0000 E		Call gotoxy
+ 052D  A1 0078 R		mov ax, xcoordinate
+				;Call WriteDec
+ 0530  B2 41			mov dl,65
+ 0532  E8 0000 E		call gotoxy
+ 0535  A1 007A R		mov ax,ycoordinate
+				;Call WriteDec
+ 0538				smp_exit:
+ 0538  61			popa
+ 0539  C3			ret
+ 053A				ShowMousePosition ENDP
+				;=====================================;
+				;Loading functions
+
+
+ 053A				gotoxy1 PROC
+ 053A  60				pusha
+ 053B  B4 02				mov ah,2
+ 053D  B7 00				mov bh,0
+ 053F  CD 10				int 10h
+ 0541  61				popa
+ 0542  C3			ret
+ 0543				gotoxy1 ENDP
+
+ 0543				Wall PROC
+ 0543  60				pusha
+ 0544  B4 02				mov ah,2
+ 0546  B7 00				mov bh,0
+ 0548  CD 10				int 10h
+ 054A  B4 09				mov ah,9
+ 054C  B7 00				mov bh,0
+ 054E  B3 0D				mov bl,0Dh
+ 0550  B9 0001				mov cx,1
+ 0553  CD 10				int 10h
+ 0555  61				popa
+ 0556  C3			ret
+ 0557				Wall ENDP
+
+ 0557				str_function proc 
+ 0557  B9 000B						mov cx,lengthof Load1                      ;mov dx, offset tic
+ 055A  49						dec cx
+ 055B  BE 0000						mov si, 0                           ;call writestring       
+ 055E  B2 19						mov dl, 25
+ 0560				l2:
+ 0560  89 0E 008C R				mov temp1, cx
+ 0564  B4 02					mov ah,2   								;gotoxy
+ 0566  B6 08					mov dh,8								;row
+ 0568  B7 00					mov bh,0    							;video page
+ 056A  CD 10					int 10h
+ 056C  B4 09					mov ah, 9                              ; Function
+ 056E  8A 84 0081 R				mov al, Load1[si]                        ; Assign value
+ 0572  B7 00					mov bh, 0                              ; Vedio page
+ 0574  B3 0A					mov bl, 0Ah                           ; For Color
+ 0576  B9 0001					mov cx, 1                              ; Loop
+ 0579  CD 10					int 10h                                ; interrupts
+ 057B  FE C2					inc dl 									;inc col
+ 057D  46					inc si    							;show var
+ 057E  8B 0E 008C R				mov cx,temp1
+ 0582  E2 DC			loop l2
+ 0584  C3			ret 
+ 0585				str_function endp
+
+
+ 0585				main3 PROC
+ 0585  E8 FFCF				call str_function
+
+ 0588  B2 19				mov dl,25
+ 058A  66| B9 0000001E			mov ecx,30
+ 0590					L:
+ 0590  B6 0A					mov dh,10
+ 0592  B0 2D					mov al,'-'
+ 0594  E8 FFAC					call Wall
+ 0597  B6 0C					mov dh,12
+ 0599  B0 2D					mov al,'-'
+ 059B  E8 FFA5					call Wall
+ 059E  FE C2					inc dl
+ 05A0  E2 EE				LOOP L
+ 05A2  66| B9 0000001E			mov ecx,30
+ 05A8  B2 19				mov dl,25
+ 05AA  B0 B2				mov al,178
+ 05AC					L1:
+ 05AC  B0 B2					mov al,178
+ 05AE  B6 0B					mov dh,11
+ 05B0  E8 FF90					call Wall
+ 05B3  66| 52					push edx
+ 05B5  66| 51					push ecx
+ 05B7  B8 0096					mov ax,150
+ 05BA  E8 0000 E				call delay
+ 05BD  66| 59					pop ecx
+ 05BF  66| 5A					pop edx
+ 05C1  FE C2				INC dl
+ 05C3  E2 E7				LOOP L1
+					
+ 05C5  C3			ret
+ 05C6				main3 ENDP
+
+				;=====================================
+				;-----------------------move_shape_to_board proc----------------------
+
+ 05C6				move_shape_to_board proc   ;move cordinates of shape to board
+
+ 05C6  BB 00FA R		mov bx,offset border
+ 05C9  BE 00E5 R		mov si,offset shape
+ 05CC  BF 0000			mov di,0
+ 05CF  B2 00			mov dl,0
+ 05D1				outer:
+ 05D1  8A 0C			         mov cl,[si]	
+ 05D3  BB 00FA R			 mov bx,offset border
+ 05D6  B5 00				 mov ch,0
+ 05D8						loopx:
+ 05D8  83 C3 2D			                	add bx,45 
+ 05DB  E2 FB			                loop loopx
+ 05DD  46				inc si
+ 05DE  B8 0000			        mov ax,0
+ 05E1  8A 04				mov al,[si]	
+ 05E3  8B F8				mov di,ax
+ 05E5  B0 4F				mov al,79
+ 05E7  88 01				mov [di+bx],al
+ 05E9  46				inc si
+ 05EA  FE C2				inc dl
+ 05EC  80 FA 04			cmp dl,4
+ 05EF  75 E0			jne outer
+ 05F1  C3			ret
+ 05F2				move_shape_to_board endp
+
+
+ 05F2				move_next_shape_to_board proc   ;move cordinates of shape to board
+
+ 05F2  BB 00FA R		mov bx,offset border
+ 05F5  BE 00ED R		mov si,offset Nshape
+ 05F8  BF 0000			mov di,0
+ 05FB  B2 00			mov dl,0
+ 05FD				outer:
+ 05FD  8A 0C			         mov cl,[si]	
+ 05FF  BB 00FA R			 mov bx,offset border
+ 0602  B5 00				 mov ch,0
+ 0604						loopx:
+ 0604  83 C3 2D			                	add bx,45 
+ 0607  E2 FB			                loop loopx
+ 0609  46				inc si
+ 060A  B8 0000			        mov ax,0
+ 060D  8A 04				mov al,[si]	
+ 060F  8B F8				mov di,ax
+ 0611  B0 4F				mov al,79
+ 0613  88 01				mov [di+bx],al
+ 0615  46				inc si
+ 0616  FE C2				inc dl
+ 0618  80 FA 04			cmp dl,4
+ 061B  75 E0			jne outer
+ 061D  C3			ret
+ 061E				move_next_shape_to_board endp
+
+
+
+
+				;-------------------disappear_shape proc-------------
+				 
+ 061E				disappear_shape proc            ;remove previous shape
+
+ 061E  BB 00FA R		mov bx,offset border
+ 0621  BE 00E5 R		mov si,offset shape
+ 0624  BF 0000			mov di,0
+ 0627  B2 00			mov dl,0
+ 0629				outer1:
+ 0629  8A 0C			         mov cl,[si]	
+ 062B  BB 00FA R			 mov bx,offset border
+ 062E  B5 00				 mov ch,0
+ 0630						loopy:
+ 0630  83 C3 2D			                	add bx,45 
+ 0633  E2 FB			                loop loopy
+ 0635  46				inc si
+ 0636  B8 0000			        mov ax,0
+ 0639  8A 04				mov al,[si]	
+ 063B  8B F8				mov di,ax
+ 063D  B0 20				mov al,20h
+ 063F  88 01				mov [di+bx],al
+ 0641  46				inc si
+ 0642  FE C2				inc dl
+ 0644  80 FA 04			cmp dl,4
+ 0647  75 E0			jne outer1
+ 0649  C3			ret	
+
+ 064A				disappear_shape endp
+
+
+ 064A				disappear_next_shape proc            ;remove previous shape
+
+ 064A  BB 00FA R		mov bx,offset border
+ 064D  BE 00ED R		mov si,offset Nshape
+ 0650  BF 0000			mov di,0
+ 0653  B2 00			mov dl,0
+ 0655				outer1:
+ 0655  8A 0C			         mov cl,[si]	
+ 0657  BB 00FA R			 mov bx,offset border
+ 065A  B5 00				 mov ch,0
+ 065C						loopy:
+ 065C  83 C3 2D			                	add bx,45 
+ 065F  E2 FB			                loop loopy
+ 0661  46				inc si
+ 0662  B8 0000			        mov ax,0
+ 0665  8A 04				mov al,[si]	
+ 0667  8B F8				mov di,ax
+ 0669  B0 20				mov al,20h
+ 066B  88 01				mov [di+bx],al
+ 066D  46				inc si
+ 066E  FE C2				inc dl
+ 0670  80 FA 04			cmp dl,4
+ 0673  75 E0			jne outer1
+ 0675  C3			ret	
+
+ 0676				disappear_next_shape endp
+
+
+
+
+				;----------;to make row disappear----------------------
+ 0676				disappear_row  proc   ;to make row disappear 
+
+
+
+ 0676  BB 032A			mov bx,810
+ 0679  83 C3 00			add bx,0
+ 067C  B2 00			mov dl,0
+
+ 067E				outerg:
+ 067E  B0 00				mov al,0
+ 0680  BE 0001				mov si,1
+ 0683  83 EB 2D				sub bx,45
+ 0686  89 1E 00F8 R			mov sad,bx 
+
+ 068A  FE C2				inc dl
+ 068C					    loo:
+ 068C  8A 88 00FA R		            mov cl,border[bx+si]
+ 0690  46					    inc si 
+ 0691  80 F9 20					    cmp cl,20h
+ 0694  75 2D					    jne adding
+ 0696						    haha:
+ 0696  83 FE 1B				    cmp si,27
+ 0699  75 F1				    jne loo
+					
+ 069B  3C 1A				cmp al,26
+ 069D  74 07				je disappearing
+
+ 069F  80 FA 10			cmp dl,16
+ 06A2  75 DA			jne outerg
+
+ 06A4  EB 21			jmp gaeb_row_exit
+
+ 06A6				disappearing:
+ 06A6  8B 1E 00F8 R			mov bx,sad
+ 06AA  B9 001A				mov cx,26
+ 06AD  BE 0001				mov si,1
+ 06B0					E:
+ 06B0  B0 20					mov al,20h
+ 06B2  88 80 00FA R				mov border[bx+si],al
+ 06B6  46					inc si
+
+ 06B7  E2 F7				loop E
+
+ 06B9  E8 000C			call below_row 
+
+ 06BC  80 FA 10			cmp dl,16
+ 06BF  75 BD			jne outerg
+
+ 06C1  EB 04			jmp gaeb_row_exit
+
+
+
+ 06C3				adding:
+ 06C3  FE C0				inc al
+ 06C5  EB CF				jmp haha  
+
+ 06C7				gaeb_row_exit:
+ 06C7  C3			ret 
+
+ 06C8				disappear_row endp              
+
+				;-------------------------
+
+
+
+
+ 06C8				below_row proc			;move row one step row below
+ 06C8  8B 1E 00F8 R		mov bx ,sad
+
+
+ 06CC				loop1:
+ 06CC  83 EB 2D			 sub bx,45
+
+ 06CF  BE 0001			 mov si,1
+ 06D2  BF 002E			 mov di,46
+ 06D5  C6 06 00F5 R 1A		 mov counter,26
+ 06DA  B1 20			 mov cl,20h
+ 06DC				  loop2:
+ 06DC  8A 80 00FA R		    mov al,border[bx+si]
+ 06E0  88 88 00FA R		    mov border[bx+si],cl
+ 06E4  88 81 00FA R		    mov border[bx+di],al
+ 06E8  47			     inc di
+ 06E9  46			     inc si
+ 06EA  FE 0E 00F5 R		     dec counter
+ 06EE  80 3E 00F5 R 00		  cmp counter,0
+ 06F3  75 E7			  jne loop2
+				  
+				  
+ 06F5  83 FB 00			cmp bx,0
+ 06F8  75 D2			jne loop1
+ 06FA				below_row endp 
+
+
+
+
+				;------------------check_update_L proc---------------------------
+
+ 06FA				check_update_L proc              ;check one row below if there is space then move coordinates of shape one column left
+
+ 06FA  E8 FF21			call disappear_shape 
+ 06FD  BB 00FA R		mov bx,offset border
+ 0700  BE 00E5 R		mov si,offset shape
+ 0703  BF 0000			mov di,0
+ 0706  B2 00			mov dl,0
+ 0708				outerL:
+ 0708  8A 0C			         mov cl,[si]	
+ 070A  BB 00FA R			 mov bx,offset border
+ 070D  B5 00				 mov ch,0
+ 070F						lopL:
+ 070F  83 C3 2D			                	add bx,45 
+ 0712  E2 FB			                loop lopL
+ 0714  46				inc si
+ 0715  B8 0000			        mov ax,0
+ 0718  8A 04				mov al,[si]
+ 071A  FE C8				dec al	
+ 071C  8B F8				mov di,ax
+ 071E  8A 01				mov al,[di+bx]
+ 0720  3C 20				cmp al,20h
+ 0722  75 26				jne X
+ 0724  46				inc si
+ 0725  FE C2				inc dl
+ 0727  80 FA 04			cmp dl,4
+ 072A  75 DC			jne outerL
+ 072C  B9 0004				mov cx,4
+ 072F  B0 01				mov al,1
+ 0731  BE 0001				mov si,1
+				       
+ 0734				F1:
+ 0734  28 84 00E5 R			   sub shape[si],al
+ 0738  83 C6 02				   add si,2
+ 073B  E2 F7				loop F1
+					
+ 073D  E8 FE86				call move_shape_to_board 
+ 0740  E8 0141				call draw_border 
+ 0743  C6 06 0456 R 00			mov scancode,0
+ 0748  EB 0B			jmp check_exit
+ 074A				X:
+ 074A  E8 FE79			call move_shape_to_board
+ 074D  E8 0134			call draw_border
+ 0750  C6 06 0456 R 00		mov scancode,0
+ 0755				check_exit:
+
+ 0755  C3			ret	
+ 0756				check_update_L endp
+
+
+
+				;------------------check_update_R proc---------------------------
+ 0756				check_update_R proc              ;check one row below if there is space then move coordinates of shape one column right
+ 0756  E8 FEC5			call disappear_shape 
+ 0759  BB 00FA R		mov bx,offset border
+ 075C  BE 00E5 R		mov si,offset shape
+ 075F  BF 0000			mov di,0
+ 0762  B2 00			mov dl,0
+ 0764				outerR:
+ 0764  8A 0C			         mov cl,[si]	
+ 0766  BB 00FA R			 mov bx,offset border
+ 0769  B5 00				 mov ch,0
+ 076B						lopR:
+ 076B  83 C3 2D			                	add bx,45 
+ 076E  E2 FB			                loop lopR
+ 0770  46				inc si
+ 0771  B8 0000			        mov ax,0
+ 0774  8A 04				mov al,[si]
+ 0776  40			        inc ax	
+ 0777  8B F8				mov di,ax
+ 0779  8A 01				mov al,[di+bx]
+ 077B  3C 20				cmp al,20h
+ 077D  75 26				jne X
+ 077F  46				inc si
+ 0780  FE C2				inc dl
+ 0782  80 FA 04			cmp dl,4
+ 0785  75 DD			jne outerR
+ 0787  B9 0004				mov cx,4
+ 078A  B0 01				mov al,1
+ 078C  BE 0001				mov si,1
+ 078F				        F:
+ 078F  00 84 00E5 R			   add shape[si],al
+ 0793  83 C6 02				   add si,2
+ 0796  E2 F7				loop F
+ 0798  E8 FE2B				call move_shape_to_board 
+ 079B  E8 00E6				call draw_border 
+ 079E  C6 06 0456 R 00			mov scancode,0 
+ 07A3  EB 0B			jmp check_exit
+ 07A5				X:
+
+ 07A5  E8 FE1E			call move_shape_to_board
+ 07A8  E8 00D9			call draw_border
+ 07AB  C6 06 0456 R 00		mov scancode,0
+ 07B0				check_exit:
+
+ 07B0  C3			ret	
+ 07B1				check_update_R endp
+
+
+
+
+
+				;------------------check_update_D proc---------------------------
+
+ 07B1				check_update_D proc              ;check one row below if there is space then move coordinates of shape one row below
+ 07B1  C6 06 0456 R 00		mov scancode,0 
+ 07B6  E8 FE65			call disappear_shape
+ 07B9  BB 00FA R		mov bx,offset border
+ 07BC  BE 00E5 R		mov si,offset shape
+ 07BF  BF 0000			mov di,0
+ 07C2  B2 00			mov dl,0
+ 07C4				outerD:
+ 07C4  8A 0C			         mov cl,[si]
+ 07C6  FE C1				 inc cl	
+ 07C8  BB 00FA R			 mov bx,offset border
+ 07CB  B5 00				 mov ch,0
+ 07CD						lopD:
+ 07CD  83 C3 2D			                	add bx,45 
+ 07D0  E2 FB			                loop lopD
+ 07D2  46				inc si
+ 07D3  B8 0000			        mov ax,0
+ 07D6  8A 04				mov al,[si]	
+ 07D8  8B F8				mov di,ax
+ 07DA  8A 01				mov al,[di+bx]
+ 07DC  3C 20				cmp al,20h
+ 07DE  75 28				jne Down
+ 07E0  46				inc si
+ 07E1  FE C2				inc dl
+ 07E3  80 FA 04			cmp dl,4
+ 07E6  75 DC			jne outerD
+				        
+ 07E8  B9 0004				mov cx,4
+ 07EB  B0 01				mov al,1
+ 07ED  BE 0000				mov si,0
+ 07F0				        D:
+ 07F0  00 84 00E5 R			   add shape[si],al
+ 07F4  83 C6 02				   add si,2
+ 07F7  E2 F7				loop D
+ 07F9  FF 06 0454 R			inc scores
+ 07FD  E8 00FE			        call scores_print
+ 0800  E8 FDC3				 call move_shape_to_board 
+ 0803  E8 007E				call draw_border
+				         
+ 0806  EB 1F			jmp check_exit
+ 0808				Down:
+
+ 0808  E8 FDBB			call move_shape_to_board
+ 080B  E8 0076			call draw_border
+ 080E  E8 FE65			call disappear_row
+ 0811  80 3E 00E5 R 00		cmp shape[0],0
+ 0816  74 0C			je endgame
+ 0818  80 3E 00E5 R 01		cmp shape[0],1
+ 081D  74 05			je endgame
+ 081F  E8 0109			call select_shape
+ 0822  EB 03			jmp check_exit
+ 0824				endgame:
+ 0824  E8 0529				call gameover
+
+
+ 0827				check_exit:
+ 0827  C3			ret	
+ 0828				check_update_D endp
+
+
+
+				;------------------Scan-CODE---------------------------
+
+ 0828				scan_code proc		;scan keys
+ 0828  B4 06				mov ah,6	;check input buffer
+ 082A  B2 FF				mov dl,0FFh	
+ 082C  CD 21				int 21h
+					
+
+
+
+
+ 082E  A2 0456 R				mov scancode,al
+
+
+
+ 0831  80 3E 0456 R 71				cmp scancode,71h	;Quite
+ 0836  74 2D					je total_exit
+					
+ 0838  80 3E 0456 R 70					cmp scancode,70h	;pause1
+ 083D  74 2A						je pause1_g
+						
+
+ 083F  80 3E 0456 R 4B			cmp scancode,4Bh
+ 0844  74 10			je    left_dec
+ 0846  80 3E 0456 R 4D			cmp scancode,4Dh
+ 084B  74 0E			je right_inc
+ 084D  80 3E 0456 R 50			cmp scancode,50h
+ 0852  74 0C			je down_inc
+
+ 0854  EB 18			jmp scan_exit
+ 0856				left_dec:
+ 0856  E8 FEA1				call check_update_L
+ 0859  EB 13			jmp scan_exit
+						
+ 085B				right_inc:
+ 085B  E8 FEF8				call check_update_R
+ 085E  EB 0E			jmp scan_exit
+
+ 0860				down_inc:
+ 0860  E8 FF4E				call check_update_D 
+ 0863  EB 09				jmp scan_exit
+
+ 0865				total_exit:
+ 0865  B4 4C				mov ah,4ch
+ 0867  CD 21				int 21h
+ 0869				pause1_g:
+
+ 0869  E8 0351				call halt
+ 086C  EB 00				jmp scan_exit
+						
+ 086E				scan_exit:
+
+ 086E  C3			ret
+ 086F				scan_code endp
+
+ 086F				Print_character proc ;**************Print character**********************
+
+				;---characterprint---
+
+ 086F  B4 09				mov ah,09h
+ 0871  B7 00				mov bh,0	;PAGE NUBMER
+ 0873  B3 03				mov bl,03	;colour
+ 0875  B0 4F				mov al,'O' ; "A"
+ 0877  B9 0001				mov cx,1
+ 087A  CD 10				int 10h
+
+ 087C  C3			ret
+ 087D				print_character endp
+				;*********************************************************
+
+
+				;********Video mode(Activation of Graphics mode)**********
+ 087D				video_mode_selection proc 
+
+
+ 087D  B4 00				mov ah,0	
+ 087F  B0 12				mov al,12h
+ 0881  CD 10				int 10h
+
+				; Now, we are in 640 x 480(col/row) 		( pixels any smallest piont in screen )
+				; 12h 80x25 640x480 16 colors VGA+ 1			  639=79  ,at 399row =24row
+				; 25 rows(0 to 24)and80 columns (0 to 79).(for characters) 
+
+
+				;------------------Pixel---------------
+					
+ 0883  C3			ret
+ 0884				video_mode_selection endp
+				;************************************************************
+				;************************************DRAW  Border start****************************************
+ 0884				draw_border proc
+
+				;-------clearing the screen---------
+ 0884  B0 03				mov al,03
+ 0886  B4 00				mov ah,0
+ 0888  CD 10				int 10h
+
+				;drawing border      
+ 088A  BE 0000			mov si,0
+ 088D  B9 0357			mov cx,855
+
+ 0890					display_border:
+ 0890  B4 02					mov ah,02h
+ 0892  8A 94 00FA R				mov dl ,border[si]  
+						
+ 0896  CD 21					int 21h
+ 0898  46					inc si
+ 0899  E2 F5				loop display_border
+
+ 089B  C3			ret
+ 089C				draw_border endp
+
+				;*****************Border END**************************     
+				              	
+
+
+
+				;*********** Delay1 proc***********************												 
+ 089C				Delay1 PROC
+				         
+ 089C  B4 2C			mov ah,2Ch
+ 089E  CD 21			int 21h
+
+ 08A0  88 2E 0457 R		mov hrs,ch
+ 08A4  88 0E 0458 R		mov mins,cl
+ 08A8  88 36 0459 R		mov secs,dh
+
+ 08AC  8A 1E 0459 R		mov bl,secs
+ 08B0  80 FB 3B			cmp bl,59
+ 08B3  74 02				jE minus
+
+ 08B5  EB 04				jmp nominus
+
+ 08B7				minus:
+ 08B7  B3 00				mov bl,0
+
+ 08B9  EB 07			jmp timeDelay1
+ 08BB				nominus:
+ 08BB  8A 1E 0459 R			mov bl,secs
+ 08BF  80 C3 01				add bl,1
+
+ 08C2				timeDelay1:
+ 08C2  88 1E 00F6 R			mov temporary,bl
+ 08C6  E8 FF5F				call scan_code
+ 08C9  8A 1E 00F6 R			mov bl,temporary
+ 08CD  B4 2C				mov ah,2Ch
+ 08CF  CD 21				int 21h
+ 08D1  88 2E 0457 R			mov hrs,ch
+ 08D5  88 0E 0458 R			mov mins,cl
+ 08D9  88 36 0459 R			mov secs,dh
+ 08DD  3A 1E 0459 R			cmp bl,secs
+ 08E1  74 02			jE t
+ 08E3  E2 DD			loop timeDelay1
+
+ 08E5				t:
+ 08E5  B4 2C				mov ah,2Ch
+ 08E7  CD 21				int 21h
+
+ 08E9  88 2E 0457 R			mov hrs,ch
+ 08ED  88 0E 0458 R			mov mins,cl
+ 08F1  88 36 0459 R			mov secs,dh
+ 08F5  3A 1E 0459 R			cmp bl,secs
+ 08F9  74 02				jE Delay1complete
+ 08FB  E2 E8			loop t
+
+ 08FD				Delay1complete:
+
+ 08FD  C3			RET
+ 08FE				Delay1 ENDP
+				;********************************************************  
+				  
+
+
+
+
+				;-------------------scores_print proc--------------------------
+
+ 08FE				scores_print proc
+
+ 08FE  A1 0454 R		mov ax, scores
+ 0901  BE 00D5				mov si,213
+ 0904  B9 0000			  mov cx,0
+
+ 0907  BA 0000			  mov dx,0
+
+ 090A  BB 000A			  mov bx,10d
+
+ 090D				  	loop1:
+ 090D  BA 0000			    	mov dx,0	;ax: Quotient
+
+ 0910  F7 F3			    	div bx	        
+					
+ 0912  52			    	push dx		;dx: Remainder
+
+ 0913  41			    	inc cx
+ 0914  83 F8 00			    	cmp ax,0	;if ax!=0 then
+
+ 0917  75 F4			    	jnz loop1	;Loop will be repeated
+
+ 0919				  	loop2:
+ 0919  B4 02			    	mov ah,02
+ 091B  5A			    	pop dx
+ 091C  80 C2 30				add dl,48
+ 091F  88 94 00FA R			mov border[si],dl
+ 0923  46			        inc si
+				    	;add dl,48
+				    	;int 21h
+
+ 0924  49			    	dec cx
+
+ 0925  83 F9 00			    	cmp cx,0	;if cx!=0 then
+ 0928  75 EF			    	jnz loop2	;Loop will be repeated
+
+ 092A  C3			ret
+ 092B				scores_print endp
+
+
+
+
+
+
+
+
+
+				;--------------------select_shape proc-------------------------
+
+ 092B				select_shape proc
+
+ 092B  E8 FD1C			call disappear_next_shape
+ 092E  BE 0001			mov si,1
+ 0931  B9 0004			mov cx,4
+ 0934  B0 16			mov al,22
+ 0936				loo1:
+ 0936  28 84 00ED R		  sub Nshape[si],al
+ 093A  83 C6 02			  add si,2
+ 093D  E2 F7			loop loo1
+
+ 093F  BE 0000			mov si,0
+ 0942  B9 0004			mov cx,4
+ 0945  B0 0E			mov al,14
+ 0947				looo2:
+ 0947  28 84 00ED R		  sub Nshape[si],al
+ 094B  83 C6 02			  add si,2
+ 094E  E2 F7			loop looo2
+
+
+ 0950  B9 0008			mov cx,8
+ 0953  BE 0000			mov si,0
+ 0956  B8 0000			mov ax,0
+ 0959				lo:
+ 0959  8A 84 00ED R		  mov al,Nshape[si]
+ 095D  88 84 00E5 R		  mov shape[si],al
+ 0961  46			  inc si
+ 0962  E2 F5			loop lo
+
+
+ 0964  B4 2C			mov ah,2Ch ;getting random values
+
+ 0966  CD 21			int  21h
+ 0968  B8 0000			mov ax,0 
+ 096B  8A C6			mov al,dh
+ 096D  B3 13			mov bl,19
+ 096F  F6 F3			div bl
+ 0971  88 26 0453 R		mov  random,ah
+ 0975  FE 06 0453 R		inc random    
+				   
+ 0979  80 3E 0453 R 01		cmp random,1
+ 097E  0F 84 00A2		je L1
+ 0982  80 3E 0453 R 02		cmp random,2
+ 0987  0F 84 00AD		je L2
+ 098B  80 3E 0453 R 03		cmp random,3
+ 0990  0F 84 00B8		je L3
+ 0994  80 3E 0453 R 04		cmp random,4
+ 0999  0F 84 00C3		je L4
+ 099D  80 3E 0453 R 05		cmp random,5
+ 09A2  0F 84 00CE		je L5
+ 09A6  80 3E 0453 R 06		cmp random,6
+ 09AB  0F 84 00D9		je L6
+ 09AF  80 3E 0453 R 07		cmp random,7
+ 09B4  0F 84 00E4		je L7
+ 09B8  80 3E 0453 R 08		cmp random,8
+ 09BD  0F 84 00EF		je L8
+ 09C1  80 3E 0453 R 09		cmp random,9
+ 09C6  0F 84 00FA		je L9
+ 09CA  80 3E 0453 R 0A		cmp random,10
+ 09CF  0F 84 0105		je L10
+ 09D3  80 3E 0453 R 0B		cmp random,11
+ 09D8  0F 84 0110		je L11
+ 09DC  80 3E 0453 R 0C		cmp random,12
+ 09E1  0F 84 011B		je L12
+ 09E5  80 3E 0453 R 0D		cmp random,13
+ 09EA  0F 84 0126		je L13
+ 09EE  80 3E 0453 R 0E		cmp random,14
+ 09F3  0F 84 0130		je L14
+ 09F7  80 3E 0453 R 0F		cmp random,15
+ 09FC  0F 84 013A		je L15
+ 0A00  80 3E 0453 R 10		cmp random,16
+ 0A05  0F 84 0144		je L16
+ 0A09  80 3E 0453 R 11		cmp random,17
+ 0A0E  0F 84 014E		je L17
+ 0A12  80 3E 0453 R 12		cmp random,18
+ 0A17  0F 84 0158		je L18
+ 0A1B  80 3E 0453 R 13		cmp random,19
+ 0A20  0F 84 0162		je L19
+
+
+				;for copying the shapes values to Nshape variabe
+
+ 0A24				L1:
+ 0A24  B9 0008			mov cx,8
+ 0A27  BE 0000			mov si,0
+ 0A2A					copy1:
+
+ 0A2A  8A 84 0470 R				mov al,shape1[si]
+ 0A2E  88 84 00ED R				mov Nshape[si],al
+ 0A32  46					inc si
+ 0A33  E2 F5				loop copy1
+ 0A35  E9 015F			jmp exit_select_shape
+
+
+ 0A38				L2:
+ 0A38  B9 0008			mov cx,8
+ 0A3B  BE 0000			mov si,0
+ 0A3E					copy2:
+
+ 0A3E  8A 84 0478 R				mov al,shape2[si]
+ 0A42  88 84 00ED R				mov Nshape[si],al
+ 0A46  46					inc si
+ 0A47  E2 F5				loop copy2
+ 0A49  E9 014B			jmp exit_select_shape
+
+ 0A4C				L3:
+ 0A4C  B9 0008			mov cx,8
+ 0A4F  BE 0000			mov si,0
+ 0A52					copy3:
+
+ 0A52  8A 84 0480 R				mov al,shape3[si]
+ 0A56  88 84 00ED R				mov Nshape[si],al
+ 0A5A  46					inc si
+ 0A5B  E2 F5				loop copy3
+ 0A5D  E9 0137			jmp exit_select_shape
+
+ 0A60				L4:
+ 0A60  B9 0008			mov cx,8
+ 0A63  BE 0000			mov si,0
+ 0A66					copy4:
+
+ 0A66  8A 84 0488 R				mov al,shape4[si]
+ 0A6A  88 84 00ED R				mov Nshape[si],al
+ 0A6E  46					inc si
+ 0A6F  E2 F5				loop copy4
+ 0A71  E9 0123			jmp exit_select_shape
+
+ 0A74				L5:
+ 0A74  B9 0008			mov cx,8
+ 0A77  BE 0000			mov si,0
+ 0A7A					copy5:
+
+ 0A7A  8A 84 0490 R				mov al,shape5[si]
+ 0A7E  88 84 00ED R				mov Nshape[si],al
+ 0A82  46					inc si
+ 0A83  E2 F5				loop copy5
+ 0A85  E9 010F			jmp exit_select_shape
+
+ 0A88				L6:
+ 0A88  B9 0008			mov cx,8
+ 0A8B  BE 0000			mov si,0
+ 0A8E					copy6:
+
+ 0A8E  8A 84 0498 R				mov al,shape6[si]
+ 0A92  88 84 00ED R				mov Nshape[si],al
+ 0A96  46					inc si
+ 0A97  E2 F5				loop copy6
+ 0A99  E9 00FB			jmp exit_select_shape
+
+ 0A9C				L7:
+ 0A9C  B9 0008			mov cx,8
+ 0A9F  BE 0000			mov si,0
+ 0AA2					copy7:
+
+ 0AA2  8A 84 04A0 R				mov al,shape7[si]
+ 0AA6  88 84 00E5 R				mov shape[si],al
+ 0AAA  46					inc si
+ 0AAB  E2 F5				loop copy7
+ 0AAD  E9 00E7			jmp exit_select_shape
+
+ 0AB0				L8:
+ 0AB0  B9 0008			mov cx,8
+ 0AB3  BE 0000			mov si,0
+ 0AB6					copy8:
+
+ 0AB6  8A 84 04A8 R				mov al,shape8[si]
+ 0ABA  88 84 00ED R				mov Nshape[si],al
+ 0ABE  46					inc si
+ 0ABF  E2 F5				loop copy8
+ 0AC1  E9 00D3			jmp exit_select_shape
+
+ 0AC4				L9:
+ 0AC4  B9 0008			mov cx,8
+ 0AC7  BE 0000			mov si,0
+ 0ACA					copy9:
+
+ 0ACA  8A 84 04B0 R				mov al,shape9[si]
+ 0ACE  88 84 00ED R				mov Nshape[si],al
+ 0AD2  46					inc si
+ 0AD3  E2 F5				loop copy9
+ 0AD5  E9 00BF			jmp exit_select_shape
+
+ 0AD8				L10:
+ 0AD8  B9 0008			mov cx,8
+ 0ADB  BE 0000			mov si,0
+ 0ADE					copy10:
+
+ 0ADE  8A 84 04B8 R				mov al,shape10[si]
+ 0AE2  88 84 00ED R				mov Nshape[si],al
+ 0AE6  46					inc si
+ 0AE7  E2 F5				loop copy10
+ 0AE9  E9 00AB			jmp exit_select_shape
+
+ 0AEC				L11:
+ 0AEC  B9 0008			mov cx,8
+ 0AEF  BE 0000			mov si,0
+ 0AF2					copy11:
+
+ 0AF2  8A 84 04C0 R				mov al,shape11[si]
+ 0AF6  88 84 00ED R				mov Nshape[si],al
+ 0AFA  46					inc si
+ 0AFB  E2 F5				loop copy11
+ 0AFD  E9 0097			jmp exit_select_shape
+
+ 0B00				L12:
+ 0B00  B9 0008			mov cx,8
+ 0B03  BE 0000			mov si,0
+ 0B06					copy12:
+
+ 0B06  8A 84 04C8 R				mov al,shape12[si]
+ 0B0A  88 84 00ED R				mov Nshape[si],al
+ 0B0E  46					inc si
+ 0B0F  E2 F5				loop copy12
+ 0B11  E9 0083			jmp exit_select_shape
+
+ 0B14				L13:
+ 0B14  B9 0008			mov cx,8
+ 0B17  BE 0000			mov si,0
+ 0B1A					copy13:
+
+ 0B1A  8A 84 04D0 R				mov al,shape13[si]
+ 0B1E  88 84 00ED R				mov Nshape[si],al
+ 0B22  46					inc si
+ 0B23  E2 F5				loop copy13
+ 0B25  EB 70			jmp exit_select_shape
+
+ 0B27				L14:
+ 0B27  B9 0008			mov cx,8
+ 0B2A  BE 0000			mov si,0
+ 0B2D					copy14:
+
+ 0B2D  8A 84 04D8 R				mov al,shape14[si]
+ 0B31  88 84 00ED R				mov Nshape[si],al
+ 0B35  46					inc si
+ 0B36  E2 F5				loop copy14
+ 0B38  EB 5D			jmp exit_select_shape
+
+ 0B3A				L15:
+ 0B3A  B9 0008			mov cx,8
+ 0B3D  BE 0000			mov si,0
+					
+ 0B40					copy15:
+
+ 0B40  8A 84 04E0 R				mov al,shape15[si]
+ 0B44  88 84 00ED R				mov Nshape[si],al
+ 0B48  46					inc si
+ 0B49  E2 F5				loop copy15
+ 0B4B  EB 4A			jmp exit_select_shape
+
+ 0B4D				L16:
+ 0B4D  B9 0008			mov cx,8
+ 0B50  BE 0000			mov si,0
+					
+ 0B53					copy16:
+
+ 0B53  8A 84 04E8 R				mov al,shape16[si]
+ 0B57  88 84 00ED R				mov Nshape[si],al
+ 0B5B  46					inc si
+ 0B5C  E2 F5				loop copy16
+ 0B5E  EB 37			jmp exit_select_shape
+
+
+ 0B60				L17:
+ 0B60  B9 0008			mov cx,8
+ 0B63  BE 0000			mov si,0
+ 0B66					copy17:
+
+ 0B66  8A 84 04F0 R				mov al,shape17[si]
+ 0B6A  88 84 00ED R				mov Nshape[si],al
+ 0B6E  46					inc si
+ 0B6F  E2 F5				loop copy17
+ 0B71  EB 24			jmp exit_select_shape
+
+ 0B73				L18:
+ 0B73  B9 0008			mov cx,8
+ 0B76  BE 0000			mov si,0
+ 0B79					copy18:
+ 0B79  8A 84 04F8 R				mov al,shape18[si]
+ 0B7D  88 84 00E5 R				mov shape[si],al
+ 0B81  46					inc si
+ 0B82  E2 F5				loop copy18
+ 0B84  EB 11			jmp exit_select_shape
+
+ 0B86				L19:
+ 0B86  B9 0008			mov cx,8
+ 0B89  BE 0000			mov si,0
+
+ 0B8C					copy19:
+ 0B8C  8A 84 0500 R				mov al,shape19[si]
+ 0B90  88 84 00ED R				mov Nshape[si],al
+ 0B94  46					inc si
+ 0B95  E2 F5				loop copy19
+
+ 0B97				exit_select_shape:
+
+
+ 0B97  BE 0001			mov si,1
+ 0B9A  B9 0004			mov cx,4
+ 0B9D  B0 16			mov al,22
+ 0B9F				loo:
+ 0B9F  00 84 00ED R		  add Nshape[si],al
+ 0BA3  83 C6 02			  add si,2
+ 0BA6  E2 F7			loop loo
+
+ 0BA8  BE 0000			mov si,0
+ 0BAB  B9 0004			mov cx,4
+ 0BAE  B0 0E			mov al,14
+ 0BB0				looo:
+ 0BB0  00 84 00ED R		  add Nshape[si],al
+ 0BB4  83 C6 02			  add si,2
+ 0BB7  E2 F7			loop looo
+
+
+
+
+ 0BB9  E8 FA36			call move_next_shape_to_board
+
+ 0BBC  C3			ret 
+ 0BBD				select_shape endp
+
+				;***************halt proc**************************
+ 0BBD				halt proc
+
+ 0BBD					chaker:
+ 0BBD  B4 01				mov ah,01
+ 0BBF  CD 21				int 21h
+
+ 0BC1  3C 01				cmp al,1
+ 0BC3  75 00				jne con
+					
+					
+					
+
+ 0BC5				con:
+ 0BC5  E8 FCD4			call Delay1
+
+ 0BC8  C3			ret
+ 0BC9				halt endp
+				;------------------Madeby-------------
+
+ 0BC9				Madeby proc
+				COMMENT @	mov ah, 2
+					mov dl, 30
+					mov dh, 7
+					mov bh, 0
+				    int 10h
+					
+					mov dx, OFFSET string3
+					call WriteString
+
+					mov ah, 2
+					mov dl, 30
+					mov dh, 8
+					mov bh, 0
+				    int 10h
+					
+					mov dx, OFFSET string4
+					call WriteString	
+
+					mov ah, 2
+					mov dl, 30
+					mov dh, 9
+					mov bh, 0
+				    int 10h
+					
+					mov dx, OFFSET string5
+					call WriteString	
+					
+					mov ah, 2
+					mov dl, 30
+					mov dh, 10
+					mov bh, 0
+				    int 10h
+					
+					mov dx, OFFSET string6
+					call WriteString
+					@
+					
+ 0BC9  B9 001A				mov cx,lengthof game                     ;mov dx, offset game
+ 0BCC  49				        dec cx
+ 0BCD  BE 0000						mov si, 0						   ;call writestring
+ 0BD0  B2 19						mov dl, 25
+ 0BD2  C7 06 059D R 0000				mov temp , 0
+ 0BD8				lable_1:
+ 0BD8  89 0E 059D R				mov temp ,cx
+ 0BDC  B4 09					mov ah, 9                              ;Function
+ 0BDE  8A 84 0508 R				mov al, game[si]                        ;Assign value
+ 0BE2  B7 00					mov bh, 0                              ;Vedio page
+ 0BE4  B3 02					mov bl, 02h                           ;For Color
+ 0BE6  B9 0001					mov cx, 1                              ;Loop
+ 0BE9  CD 10					int 10h                                ;interrupts
+ 0BEB  B4 02					mov ah,2                               ;gotoxy
+ 0BED  B6 01					mov dh,1	                           ;row
+ 0BEF  B7 00					mov bh,0                               ;video page
+ 0BF1  CD 10					int 10h
+ 0BF3  FE C2					inc dl 		                           ;inc col
+ 0BF5  46					inc si                              ;show var
+ 0BF6  8B 0E 059D R				mov cx,temp
+ 0BFA  B8 0064					mov ax, 100
+						;call Delay
+ 0BFD  E2 D9			loop lable_1
+				;------------------------------------------------------------------
+ 0BFF  B9 0015						mov cx,lengthof project                     ;mov dx, offset tac
+ 0C02  49				        dec cx
+ 0C03  BE 0000						mov si, 0						   ;call writestring
+ 0C06  B2 0A						mov dl, 10
+ 0C08				lable_2:
+ 0C08  89 0E 059D R				mov temp,cx
+ 0C0C  B4 09					mov ah, 9                              ;Function
+ 0C0E  8A 84 0522 R				mov al, project[si]                        ;Assign value
+ 0C12  B7 00					mov bh, 0                              ;Vedio page
+ 0C14  B3 07					mov bl, 07h                            ;For Color
+ 0C16  B9 0001					mov cx, 1                              ;Loop
+ 0C19  CD 10					int 10h                                ;interrupts
+ 0C1B  B4 02					mov ah,2                               ;gotoxy
+ 0C1D  B6 04					mov dh,4	                           ;row
+ 0C1F  B7 00					mov bh,0                               ;video page
+ 0C21  CD 10					int 10h
+ 0C23  FE C2					inc dl 		                           ;inc col
+ 0C25  46					inc si                              ;show var
+ 0C26  8B 0E 059D R				mov cx,temp
+ 0C2A  B8 0064					mov ax, 100
+						;call Delay
+ 0C2D  E2 D9			loop lable_2
+				;------------------------------------------------------------------
+ 0C2F  B9 0009						mov cx,lengthof project_name       ;mov dx, offset project
+ 0C32  49				        dec cx
+ 0C33  BE 0000						mov si, 0						   ;call writestring
+ 0C36  B2 14						mov dl, 20
+ 0C38				lable_3:
+ 0C38  89 0E 059D R				mov temp , cx
+ 0C3C  B4 09					mov ah, 9                              ;Function
+ 0C3E  8A 84 0537 R				mov al, project_name[si]                        ;Assign value
+ 0C42  B7 00					mov bh, 0                              ;Vedio page
+ 0C44  B3 07					mov bl, 07h                            ;For Color
+ 0C46  B9 0001					mov cx, 1                              ;Loop
+ 0C49  CD 10					int 10h                                ;interrupts
+ 0C4B  B4 02					mov ah,2                               ;gotoxy
+ 0C4D  B6 06					mov dh,6	                           ;row
+ 0C4F  B7 00					mov bh,0                               ;video page
+ 0C51  CD 10					int 10h
+ 0C53  FE C2					inc dl 		                           ;inc col
+ 0C55  46					inc si                              ;show var
+ 0C56  8B 0E 059D R				mov cx, temp
+ 0C5A  B8 0064					mov ax, 100
+						;call Delay
+ 0C5D  E2 D9			loop lable_3
+				;------------------------------------------------------------------
+ 0C5F  B9 0012						mov cx,lengthof member                    ;mov dx, offset tac
+ 0C62  49				        dec cx
+ 0C63  BE 0000						mov si, 0						   ;call writestring
+ 0C66  B2 0A						mov dl, 10
+ 0C68				lable_4:
+ 0C68  89 0E 059D R				mov temp,cx
+ 0C6C  B4 09					mov ah, 9                              ;Function
+ 0C6E  8A 84 0540 R				mov al, member[si]                        ;Assign value
+ 0C72  B7 00					mov bh, 0                              ;Vedio page
+ 0C74  B3 04					mov bl, 04h                           ;For Color
+ 0C76  B9 0001					mov cx, 1                              ;Loop
+ 0C79  CD 10					int 10h                                ;interrupts
+ 0C7B  B4 02					mov ah,2                               ;gotoxy
+ 0C7D  B6 08					mov dh,8	                           ;row
+ 0C7F  B7 00					mov bh,0                               ;video page
+ 0C81  CD 10					int 10h
+ 0C83  FE C2					inc dl 		                           ;inc col
+ 0C85  46					inc si                              ;show var
+ 0C86  8B 0E 059D R				mov cx, temp
+ 0C8A  B8 0064					mov ax, 100
+						;call Delay
+ 0C8D  E2 D9			loop lable_4
+				;------------------------------------------------------------------
+ 0C8F  B9 0011						mov cx,lengthof member_1                    ;mov dx, offset tac
+ 0C92  49				        dec cx
+ 0C93  BE 0000						mov si, 0						   ;call writestring
+ 0C96  B2 14						mov dl, 20
+ 0C98				lable_5:
+ 0C98  89 0E 059D R				mov temp , cx
+ 0C9C  B4 09					mov ah, 9                              ;Function
+ 0C9E  8A 84 0552 R				mov al, member_1[si]                        ;Assign value
+ 0CA2  B7 00					mov bh, 0                              ;Vedio page
+ 0CA4  B3 04					mov bl, 04h                            ;For Color
+ 0CA6  B9 0001					mov cx, 1                              ;Loop
+ 0CA9  CD 10					int 10h                                ;interrupts
+ 0CAB  B4 02					mov ah,2                               ;gotoxy
+ 0CAD  B6 0A					mov dh,10	                           ;row
+ 0CAF  B7 00					mov bh,0                               ;video page
+ 0CB1  CD 10					int 10h
+ 0CB3  FE C2					inc dl 		                           ;inc col
+ 0CB5  46					inc si                              ;show var
+ 0CB6  8B 0E 059D R				mov cx,temp
+ 0CBA  B8 0064					mov ax, 100
+						;call Delay
+ 0CBD  E2 D9			loop lable_5
+				;------------------------------------------------------------------
+ 0CBF  B9 0016						mov cx,lengthof member_2                     ;mov dx, offset tac
+ 0CC2  49				        dec cx
+ 0CC3  BE 0000						mov si, 0						   ;call writestring
+ 0CC6  B2 14						mov dl, 20
+ 0CC8				lable_6:
+ 0CC8  89 0E 059D R				mov temp , cx
+ 0CCC  B4 09					mov ah, 9                              ;Function
+ 0CCE  8A 84 0563 R				mov al, member_2[si]                        ;Assign value
+ 0CD2  B7 00					mov bh, 0                              ;Vedio page
+ 0CD4  B3 04					mov bl, 04h                            ;For Color
+ 0CD6  B9 0001					mov cx, 1                              ;Loop
+ 0CD9  CD 10					int 10h                                ;interrupts
+ 0CDB  B4 02					mov ah,2                               ;gotoxy
+ 0CDD  B6 0B					mov dh,11	                           ;row
+ 0CDF  B7 00					mov bh,0                               ;video page
+ 0CE1  CD 10					int 10h
+ 0CE3  FE C2					inc dl 		                           ;inc col
+ 0CE5  46					inc si                              ;show var
+ 0CE6  8B 0E 059D R				mov cx , temp
+ 0CEA  B8 0064					mov ax, 100
+						;call Delay
+ 0CED  E2 D9			loop lable_6
+				;------------------------------------------------------------------
+
+				;--------------------------------------------------------------
+ 0CEF  B9 0011						mov cx,lengthof submit                     ;mov dx, offset tac
+ 0CF2  49				        dec cx
+ 0CF3  BE 0000						mov si, 0						   ;call writestring
+ 0CF6  B2 0A						mov dl, 10
+ 0CF8				lable_8:
+ 0CF8  89 0E 059D R				mov temp,cx
+ 0CFC  B4 09					mov ah, 9                              ;Function
+ 0CFE  8A 84 0579 R				mov al, submit[si]                        ;Assign value
+ 0D02  B7 00					mov bh, 0                              ;Vedio page
+ 0D04  B3 09					mov bl, 09h                            ;For Color
+ 0D06  B9 0001					mov cx, 1                              ;Loop
+ 0D09  CD 10					int 10h                                ;interrupts
+ 0D0B  B4 02					mov ah,2                               ;gotoxy
+ 0D0D  B6 0E					mov dh,14	                           ;row
+ 0D0F  B7 00					mov bh,0                               ;video page
+ 0D11  CD 10					int 10h
+ 0D13  FE C2					inc dl 		                           ;inc col
+ 0D15  46					inc si                              ;show var
+ 0D16  8B 0E 059D R				mov cx,temp
+ 0D1A  B8 0064					mov ax, 100
+						;call Delay
+ 0D1D  E2 D9			loop lable_8
+				;-------------------------------------------------------------
+ 0D1F  B9 0013						mov cx,lengthof sir                     ;mov dx, offset tac
+ 0D22  49				        dec cx
+ 0D23  BE 0000						mov si, 0						   ;call writestring
+ 0D26  B2 14						mov dl, 20
+ 0D28				lable_9:
+ 0D28  89 0E 059D R				mov temp , cx
+ 0D2C  B4 09					mov ah, 9                              ;Function
+ 0D2E  8A 84 058A R				mov al, sir[si]                        ;Assign value
+ 0D32  B7 00					mov bh, 0                              ;Vedio page
+ 0D34  B3 09					mov bl, 09h                            ;For Color
+ 0D36  B9 0001					mov cx, 1                              ;Loop
+ 0D39  CD 10					int 10h                                ;interrupts
+ 0D3B  B4 02					mov ah,2                               ;gotoxy
+ 0D3D  B6 10					mov dh,16	                           ;row
+ 0D3F  B7 00					mov bh,0                               ;video page
+ 0D41  CD 10					int 10h
+ 0D43  FE C2					inc dl 		                           ;inc col
+ 0D45  46					inc si                              ;show var
+ 0D46  8B 0E 059D R				mov cx , temp
+ 0D4A  B8 0064					mov ax, 100
+						;call Delay
+ 0D4D  E2 D9			loop lable_9
+				;-----------------------------------------------------------------	
+					
+					
+ 0D4F  C3			ret
+ 0D50				Madeby endp
+
+ 0D50				gameover proc
+ 0D50  B0 03				mov al,03
+ 0D52  B4 00				mov ah,0
+ 0D54  CD 10				int 10h
+
+
+ 0D56  B9 0009				mov cx,9
+ 0D59  B0 19				mov al, 25    	; col
+ 0D5B  BE 0000				mov si,0
+ 0D5E				loop1: 
+				        ;mov dh,10
+				        ;mov dl,al
+					;int 10h  ; row column already set
+					
+ 0D5E  8A 94 0466 R		        mov dl ,string2[si]
+ 0D62  B4 02			        mov ah,02h  
+ 0D64  CD 21				int 21h
+					
+ 0D66  FE C0				inc al	
+ 0D68  46				inc si
+ 0D69  E2 F3			loop loop1
+ 0D6B  E8 FB2E			        call Delay1
+ 0D6E  E8 FB2B				call Delay1
+ 0D71  E8 FB28				call Delay1
+ 0D74  B4 4C				mov ah,4ch
+ 0D76  CD 15				int 21
+ 0D78				gameover endp
+				end main
+Microsoft (R) Macro Assembler Version 6.15.8803		    12/30/17 21:50:11
+tetris.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+IsDefined  . . . . . . . . . . .	Func
+NewLine  . . . . . . . . . . . .	Proc
+ShowFlag . . . . . . . . . . . .	Proc
+ShowRegister . . . . . . . . . .	Proc
+WriteSpace . . . . . . . . . . .	Proc
+mDumpMem . . . . . . . . . . . .	Proc
+mGotoxy  . . . . . . . . . . . .	Proc
+mNewLine . . . . . . . . . . . .	Proc
+mReadStr . . . . . . . . . . . .	Proc
+mWriteLn . . . . . . . . . . . .	Proc
+mWriteStr  . . . . . . . . . . .	Proc
+mWrite . . . . . . . . . . . . .	Proc
+startup  . . . . . . . . . . . .	Proc
+
+
+Structures and Unions:
+
+                N a m e                  Size
+                                         Offset      Type
+
+ExtGetDskFreSpcStruc . . . . . .	 002C
+  StructSize . . . . . . . . . .	 0000	     Word
+  Level  . . . . . . . . . . . .	 0002	     Word
+  SectorsPerCluster  . . . . . .	 0004	     DWord
+  BytesPerSector . . . . . . . .	 0008	     DWord
+  AvailableClusters  . . . . . .	 000C	     DWord
+  TotalClusters  . . . . . . . .	 0010	     DWord
+  AvailablePhysSectors . . . . .	 0014	     DWord
+  TotalPhysSectors . . . . . . .	 0018	     DWord
+  AvailableAllocationUnits . . .	 001C	     DWord
+  TotalAllocationUnits . . . . .	 0020	     DWord
+  Rsvd . . . . . . . . . . . . .	 0024	     DWord
+TimeRecord . . . . . . . . . . .	 0004
+  hours  . . . . . . . . . . . .	 0000	     Byte
+  minutes  . . . . . . . . . . .	 0001	     Byte
+  seconds  . . . . . . . . . . .	 0002	     Byte
+  hhss . . . . . . . . . . . . .	 0003	     Byte
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	16 Bit	 0624	  Word	  Public  'DATA'	
+STACK  . . . . . . . . . . . . .	16 Bit	 1000	  Para	  Stack	  'STACK'	 
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0D78	  Word	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+ClrScr . . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+CreateFile . . . . . . . . . . .	P Near	 00F1	  _TEXT	Length= 002C Public STDCALL
+  fileName . . . . . . . . . . .	Word	 bp + 0004
+  quit . . . . . . . . . . . . .	L Near	 010C	  _TEXT	
+Crlf . . . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Delay1 . . . . . . . . . . . . .	P Near	 089C	  _TEXT	Length= 0062 Public STDCALL
+  minus  . . . . . . . . . . . .	L Near	 08B7	  _TEXT	
+  nominus  . . . . . . . . . . .	L Near	 08BB	  _TEXT	
+  timeDelay1 . . . . . . . . . .	L Near	 08C2	  _TEXT	
+  t  . . . . . . . . . . . . . .	L Near	 08E5	  _TEXT	
+  Delay1complete . . . . . . . .	L Near	 08FD	  _TEXT	
+Delay  . . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+DeleteFile . . . . . . . . . . .	P Near	 01B1	  _TEXT	Length= 0022 Public STDCALL
+  fileName . . . . . . . . . . .	Word	 bp + 0004
+  quit . . . . . . . . . . . . .	L Near	 01BF	  _TEXT	
+DumpMem  . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+DumpRegs . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+GetMeToXY  . . . . . . . . . . .	P Near	 0032	  _TEXT	Length= 0007 Public STDCALL
+GetMousePosition . . . . . . . .	P Near	 044D	  _TEXT	Length= 0008 Public STDCALL
+Get_Commandtail  . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Get_Time . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Gotoxy . . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+HideCursor11 . . . . . . . . . .	P Near	 0455	  _TEXT	Length= 000C Public STDCALL
+HideCursor . . . . . . . . . . .	P Near	 001E	  _TEXT	Length= 000C Public STDCALL
+HideMousePointer . . . . . . . .	P Near	 046D	  _TEXT	Length= 0008 Public STDCALL
+HorizontalLine . . . . . . . . .	P Near	 0087	  _TEXT	Length= 000B Public STDCALL
+  l0 . . . . . . . . . . . . . .	L Near	 0087	  _TEXT	
+InitMode . . . . . . . . . . . .	P Near	 0000	  _TEXT	Length= 0005 Public STDCALL
+IsDigit  . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+LeftButtonClick  . . . . . . . .	P Near	 047D	  _TEXT	Length= 0083 Public STDCALL
+  LBC1 . . . . . . . . . . . . .	L Near	 04DC	  _TEXT	
+  lbc_exit . . . . . . . . . . .	L Near	 04FE	  _TEXT	
+Madeby . . . . . . . . . . . . .	P Near	 0BC9	  _TEXT	Length= 0187 Public STDCALL
+  lable_1  . . . . . . . . . . .	L Near	 0BD8	  _TEXT	
+  lable_2  . . . . . . . . . . .	L Near	 0C08	  _TEXT	
+  lable_3  . . . . . . . . . . .	L Near	 0C38	  _TEXT	
+  lable_4  . . . . . . . . . . .	L Near	 0C68	  _TEXT	
+  lable_5  . . . . . . . . . . .	L Near	 0C98	  _TEXT	
+  lable_6  . . . . . . . . . . .	L Near	 0CC8	  _TEXT	
+  lable_8  . . . . . . . . . . .	L Near	 0CF8	  _TEXT	
+  lable_9  . . . . . . . . . . .	L Near	 0D28	  _TEXT	
+PrintChar  . . . . . . . . . . .	P Near	 0012	  _TEXT	Length= 000C Public STDCALL
+PrintPX  . . . . . . . . . . . .	P Near	 0005	  _TEXT	Length= 000D Public STDCALL
+PrintString  . . . . . . . . . .	P Near	 0040	  _TEXT	Length= 001F Public STDCALL
+  loc  . . . . . . . . . . . . .	Word	 bp + 0004
+  l0 . . . . . . . . . . . . . .	L Near	 0046	  _TEXT	
+  return . . . . . . . . . . . .	L Near	 005B	  _TEXT	
+Print_character  . . . . . . . .	P Near	 086F	  _TEXT	Length= 000E Public STDCALL
+Random32 . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+RandomRange  . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Randomize  . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+ReadChar . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+ReadFile . . . . . . . . . . . .	P Near	 011D	  _TEXT	Length= 004A Public STDCALL
+  fileName . . . . . . . . . . .	Word	 bp + 0004
+  buffer . . . . . . . . . . . .	Word	 bp + 0006
+  bufferSize . . . . . . . . . .	Word	 bp + 0008
+  fileHandle . . . . . . . . . .	Word	 bp - 0002
+  quit . . . . . . . . . . . . .	L Near	 0151	  _TEXT	
+ReadHex  . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+ReadInt  . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+ReadPX . . . . . . . . . . . . .	P Near	 0075	  _TEXT	Length= 0007 Public STDCALL
+ReadString . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+SETMousePosition . . . . . . . .	P Near	 0500	  _TEXT	Length= 0006 Public STDCALL
+ScrollDown . . . . . . . . . . .	P Near	 00E0	  _TEXT	Length= 0011 Public STDCALL
+ScrollUp . . . . . . . . . . . .	P Near	 00CF	  _TEXT	Length= 0011 Public STDCALL
+ShowCursor11 . . . . . . . . . .	P Near	 0461	  _TEXT	Length= 000C Public STDCALL
+ShowCursor . . . . . . . . . . .	P Near	 002A	  _TEXT	Length= 0008 Public STDCALL
+ShowMousePointer . . . . . . . .	P Near	 0475	  _TEXT	Length= 0008 Public STDCALL
+ShowMousePosition  . . . . . . .	P Near	 0506	  _TEXT	Length= 0034 Public STDCALL
+  smp1 . . . . . . . . . . . . .	L Near	 0516	  _TEXT	
+  smp_exit . . . . . . . . . . .	L Near	 0538	  _TEXT	
+Square . . . . . . . . . . . . .	P Near	 0092	  _TEXT	Length= 003D Public STDCALL
+  x  . . . . . . . . . . . . . .	Word	 bp + 0004
+  y  . . . . . . . . . . . . . .	Word	 bp + 0006
+  s  . . . . . . . . . . . . . .	Word	 bp + 0008
+Str_compare  . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Str_copy . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Str_length . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Str_trim . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Str_ucase  . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+VerticalLine . . . . . . . . . .	P Near	 007C	  _TEXT	Length= 000B Public STDCALL
+  l0 . . . . . . . . . . . . . .	L Near	 007C	  _TEXT	
+WaitMsg  . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+Wall1  . . . . . . . . . . . . .	P Near	 0291	  _TEXT	Length= 0014 Public STDCALL
+Wall . . . . . . . . . . . . . .	P Near	 0543	  _TEXT	Length= 0014 Public STDCALL
+WhereIsXY  . . . . . . . . . . .	P Near	 0039	  _TEXT	Length= 0007 Public STDCALL
+WriteBin . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+WriteChar  . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+WriteDec . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+WriteFile  . . . . . . . . . . .	P Near	 0167	  _TEXT	Length= 004A Public STDCALL
+  fileName . . . . . . . . . . .	Word	 bp + 0004
+  buffer . . . . . . . . . . . .	Word	 bp + 0006
+  bufferSize . . . . . . . . . .	Word	 bp + 0008
+  fileHandle . . . . . . . . . .	Word	 bp - 0002
+  quit . . . . . . . . . . . . .	L Near	 019B	  _TEXT	
+WriteHex . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+WriteInt . . . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+WriteString  . . . . . . . . . .	P Near	 0000	  Length= 0000 External STDCALL
+below_row  . . . . . . . . . . .	P Near	 06C8	  _TEXT	Length= 0032 Public STDCALL
+  loop1  . . . . . . . . . . . .	L Near	 06CC	  _TEXT	
+  loop2  . . . . . . . . . . . .	L Near	 06DC	  _TEXT	
+check_update_D . . . . . . . . .	P Near	 07B1	  _TEXT	Length= 0077 Public STDCALL
+  outerD . . . . . . . . . . . .	L Near	 07C4	  _TEXT	
+  lopD . . . . . . . . . . . . .	L Near	 07CD	  _TEXT	
+  D  . . . . . . . . . . . . . .	L Near	 07F0	  _TEXT	
+  Down . . . . . . . . . . . . .	L Near	 0808	  _TEXT	
+  endgame  . . . . . . . . . . .	L Near	 0824	  _TEXT	
+  check_exit . . . . . . . . . .	L Near	 0827	  _TEXT	
+check_update_L . . . . . . . . .	P Near	 06FA	  _TEXT	Length= 005C Public STDCALL
+  outerL . . . . . . . . . . . .	L Near	 0708	  _TEXT	
+  lopL . . . . . . . . . . . . .	L Near	 070F	  _TEXT	
+  F1 . . . . . . . . . . . . . .	L Near	 0734	  _TEXT	
+  X  . . . . . . . . . . . . . .	L Near	 074A	  _TEXT	
+  check_exit . . . . . . . . . .	L Near	 0755	  _TEXT	
+check_update_R . . . . . . . . .	P Near	 0756	  _TEXT	Length= 005B Public STDCALL
+  outerR . . . . . . . . . . . .	L Near	 0764	  _TEXT	
+  lopR . . . . . . . . . . . . .	L Near	 076B	  _TEXT	
+  F  . . . . . . . . . . . . . .	L Near	 078F	  _TEXT	
+  X  . . . . . . . . . . . . . .	L Near	 07A5	  _TEXT	
+  check_exit . . . . . . . . . .	L Near	 07B0	  _TEXT	
+clear  . . . . . . . . . . . . .	P Near	 005F	  _TEXT	Length= 0016 Public STDCALL
+disappear_next_shape . . . . . .	P Near	 064A	  _TEXT	Length= 002C Public STDCALL
+  outer1 . . . . . . . . . . . .	L Near	 0655	  _TEXT	
+  loopy  . . . . . . . . . . . .	L Near	 065C	  _TEXT	
+disappear_row  . . . . . . . . .	P Near	 0676	  _TEXT	Length= 0052 Public STDCALL
+  outerg . . . . . . . . . . . .	L Near	 067E	  _TEXT	
+  loo  . . . . . . . . . . . . .	L Near	 068C	  _TEXT	
+  haha . . . . . . . . . . . . .	L Near	 0696	  _TEXT	
+  disappearing . . . . . . . . .	L Near	 06A6	  _TEXT	
+  E  . . . . . . . . . . . . . .	L Near	 06B0	  _TEXT	
+  adding . . . . . . . . . . . .	L Near	 06C3	  _TEXT	
+  gaeb_row_exit  . . . . . . . .	L Near	 06C7	  _TEXT	
+disappear_shape  . . . . . . . .	P Near	 061E	  _TEXT	Length= 002C Public STDCALL
+  outer1 . . . . . . . . . . . .	L Near	 0629	  _TEXT	
+  loopy  . . . . . . . . . . . .	L Near	 0630	  _TEXT	
+draw_border  . . . . . . . . . .	P Near	 0884	  _TEXT	Length= 0018 Public STDCALL
+  display_border . . . . . . . .	L Near	 0890	  _TEXT	
+gameover . . . . . . . . . . . .	P Near	 0D50	  _TEXT	Length= 0028 Public STDCALL
+  loop1  . . . . . . . . . . . .	L Near	 0D5E	  _TEXT	
+get_value  . . . . . . . . . . .	P Near	 0421	  _TEXT	Length= 002C Public STDCALL
+  L1 . . . . . . . . . . . . . .	L Near	 042A	  _TEXT	
+  L2 . . . . . . . . . . . . . .	L Near	 043E	  _TEXT	
+  Quit1  . . . . . . . . . . . .	L Near	 0440	  _TEXT	
+gotoxy1  . . . . . . . . . . . .	P Near	 053A	  _TEXT	Length= 0009 Public STDCALL
+gotoxy2  . . . . . . . . . . . .	P Near	 02A5	  _TEXT	Length= 0009 Public STDCALL
+halt . . . . . . . . . . . . . .	P Near	 0BBD	  _TEXT	Length= 000C Public STDCALL
+  chaker . . . . . . . . . . . .	L Near	 0BBD	  _TEXT	
+  con  . . . . . . . . . . . . .	L Near	 0BC5	  _TEXT	
+main1  . . . . . . . . . . . . .	P Near	 02AE	  _TEXT	Length= 016F Public STDCALL
+  l1 . . . . . . . . . . . . . .	L Near	 02B6	  _TEXT	
+  l2 . . . . . . . . . . . . . .	L Near	 02DB	  _TEXT	
+  l3 . . . . . . . . . . . . . .	L Near	 02FE	  _TEXT	
+  l4 . . . . . . . . . . . . . .	L Near	 0321	  _TEXT	
+  L  . . . . . . . . . . . . . .	L Near	 03D0	  _TEXT	
+main2  . . . . . . . . . . . . .	P Near	 041D	  _TEXT	Length= 0004 Public STDCALL
+main3  . . . . . . . . . . . . .	P Near	 0585	  _TEXT	Length= 0041 Public STDCALL
+  L  . . . . . . . . . . . . . .	L Near	 0590	  _TEXT	
+  L1 . . . . . . . . . . . . . .	L Near	 05AC	  _TEXT	
+main . . . . . . . . . . . . . .	P Near	 01D3	  _TEXT	Length= 00BE Public STDCALL
+  lable_ . . . . . . . . . . . .	L Near	 0202	  _TEXT	
+  qwer . . . . . . . . . . . . .	L Near	 0238	  _TEXT	
+  qwert  . . . . . . . . . . . .	L Near	 024A	  _TEXT	
+  gam  . . . . . . . . . . . . .	L Near	 027C	  _TEXT	
+move_next_shape_to_board . . . .	P Near	 05F2	  _TEXT	Length= 002C Public STDCALL
+  outer  . . . . . . . . . . . .	L Near	 05FD	  _TEXT	
+  loopx  . . . . . . . . . . . .	L Near	 0604	  _TEXT	
+move_shape_to_board  . . . . . .	P Near	 05C6	  _TEXT	Length= 002C Public STDCALL
+  outer  . . . . . . . . . . . .	L Near	 05D1	  _TEXT	
+  loopx  . . . . . . . . . . . .	L Near	 05D8	  _TEXT	
+scan_code  . . . . . . . . . . .	P Near	 0828	  _TEXT	Length= 0047 Public STDCALL
+  left_dec . . . . . . . . . . .	L Near	 0856	  _TEXT	
+  right_inc  . . . . . . . . . .	L Near	 085B	  _TEXT	
+  down_inc . . . . . . . . . . .	L Near	 0860	  _TEXT	
+  total_exit . . . . . . . . . .	L Near	 0865	  _TEXT	
+  pause1_g . . . . . . . . . . .	L Near	 0869	  _TEXT	
+  scan_exit  . . . . . . . . . .	L Near	 086E	  _TEXT	
+scores_print . . . . . . . . . .	P Near	 08FE	  _TEXT	Length= 002D Public STDCALL
+  loop1  . . . . . . . . . . . .	L Near	 090D	  _TEXT	
+  loop2  . . . . . . . . . . . .	L Near	 0919	  _TEXT	
+select_shape . . . . . . . . . .	P Near	 092B	  _TEXT	Length= 0292 Public STDCALL
+  loo1 . . . . . . . . . . . . .	L Near	 0936	  _TEXT	
+  looo2  . . . . . . . . . . . .	L Near	 0947	  _TEXT	
+  lo . . . . . . . . . . . . . .	L Near	 0959	  _TEXT	
+  L1 . . . . . . . . . . . . . .	L Near	 0A24	  _TEXT	
+  copy1  . . . . . . . . . . . .	L Near	 0A2A	  _TEXT	
+  L2 . . . . . . . . . . . . . .	L Near	 0A38	  _TEXT	
+  copy2  . . . . . . . . . . . .	L Near	 0A3E	  _TEXT	
+  L3 . . . . . . . . . . . . . .	L Near	 0A4C	  _TEXT	
+  copy3  . . . . . . . . . . . .	L Near	 0A52	  _TEXT	
+  L4 . . . . . . . . . . . . . .	L Near	 0A60	  _TEXT	
+  copy4  . . . . . . . . . . . .	L Near	 0A66	  _TEXT	
+  L5 . . . . . . . . . . . . . .	L Near	 0A74	  _TEXT	
+  copy5  . . . . . . . . . . . .	L Near	 0A7A	  _TEXT	
+  L6 . . . . . . . . . . . . . .	L Near	 0A88	  _TEXT	
+  copy6  . . . . . . . . . . . .	L Near	 0A8E	  _TEXT	
+  L7 . . . . . . . . . . . . . .	L Near	 0A9C	  _TEXT	
+  copy7  . . . . . . . . . . . .	L Near	 0AA2	  _TEXT	
+  L8 . . . . . . . . . . . . . .	L Near	 0AB0	  _TEXT	
+  copy8  . . . . . . . . . . . .	L Near	 0AB6	  _TEXT	
+  L9 . . . . . . . . . . . . . .	L Near	 0AC4	  _TEXT	
+  copy9  . . . . . . . . . . . .	L Near	 0ACA	  _TEXT	
+  L10  . . . . . . . . . . . . .	L Near	 0AD8	  _TEXT	
+  copy10 . . . . . . . . . . . .	L Near	 0ADE	  _TEXT	
+  L11  . . . . . . . . . . . . .	L Near	 0AEC	  _TEXT	
+  copy11 . . . . . . . . . . . .	L Near	 0AF2	  _TEXT	
+  L12  . . . . . . . . . . . . .	L Near	 0B00	  _TEXT	
+  copy12 . . . . . . . . . . . .	L Near	 0B06	  _TEXT	
+  L13  . . . . . . . . . . . . .	L Near	 0B14	  _TEXT	
+  copy13 . . . . . . . . . . . .	L Near	 0B1A	  _TEXT	
+  L14  . . . . . . . . . . . . .	L Near	 0B27	  _TEXT	
+  copy14 . . . . . . . . . . . .	L Near	 0B2D	  _TEXT	
+  L15  . . . . . . . . . . . . .	L Near	 0B3A	  _TEXT	
+  copy15 . . . . . . . . . . . .	L Near	 0B40	  _TEXT	
+  L16  . . . . . . . . . . . . .	L Near	 0B4D	  _TEXT	
+  copy16 . . . . . . . . . . . .	L Near	 0B53	  _TEXT	
+  L17  . . . . . . . . . . . . .	L Near	 0B60	  _TEXT	
+  copy17 . . . . . . . . . . . .	L Near	 0B66	  _TEXT	
+  L18  . . . . . . . . . . . . .	L Near	 0B73	  _TEXT	
+  copy18 . . . . . . . . . . . .	L Near	 0B79	  _TEXT	
+  L19  . . . . . . . . . . . . .	L Near	 0B86	  _TEXT	
+  copy19 . . . . . . . . . . . .	L Near	 0B8C	  _TEXT	
+  exit_select_shape  . . . . . .	L Near	 0B97	  _TEXT	
+  loo  . . . . . . . . . . . . .	L Near	 0B9F	  _TEXT	
+  looo . . . . . . . . . . . . .	L Near	 0BB0	  _TEXT	
+str_function . . . . . . . . . .	P Near	 0557	  _TEXT	Length= 002E Public STDCALL
+  l2 . . . . . . . . . . . . . .	L Near	 0560	  _TEXT	
+video_mode_selection . . . . . .	P Near	 087D	  _TEXT	Length= 0007 Public STDCALL
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+??0000 . . . . . . . . . . . . .	Byte	 0000	  _DATA	
+??0001 . . . . . . . . . . . . .	Byte	 000D	  _DATA	
+??0002 . . . . . . . . . . . . .	Byte	 001E	  _DATA	
+??0003 . . . . . . . . . . . . .	Byte	 002B	  _DATA	
+??0004 . . . . . . . . . . . . .	Byte	 059F	  _DATA	
+??0005 . . . . . . . . . . . . .	Byte	 05B6	  _DATA	
+??0006 . . . . . . . . . . . . .	Byte	 05C9	  _DATA	
+??0007 . . . . . . . . . . . . .	Byte	 05DC	  _DATA	
+??0008 . . . . . . . . . . . . .	Byte	 05EF	  _DATA	
+??0009 . . . . . . . . . . . . .	Byte	 05FC	  _DATA	
+??000A . . . . . . . . . . . . .	Byte	 0609	  _DATA	
+??000B . . . . . . . . . . . . .	Byte	 0616	  _DATA	
+??000C . . . . . . . . . . . . .	Byte	 061D	  _DATA	
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0003h	 
+@Model . . . . . . . . . . . . .	Number	 0002h	 
+@cmdline . . . . . . . . . . . .	Text   	 OFFSET __98765765cmdline
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+Blanks . . . . . . . . . . . . .	Byte	 006A	  _DATA	
+ESCKEY . . . . . . . . . . . . .	Number	 001Bh	 
+File . . . . . . . . . . . . . .	Byte	 00D8	  _DATA	
+GAME1  . . . . . . . . . . . . .	L Near	 0267	  _TEXT	
+GAME3  . . . . . . . . . . . . .	L Near	 01F0	  _TEXT	
+Greeting . . . . . . . . . . . .	Byte	 003E	  _DATA	
+Load1  . . . . . . . . . . . . .	Byte	 0081	  _DATA	
+Nshape . . . . . . . . . . . . .	Byte	 00ED	  _DATA	
+QP . . . . . . . . . . . . . . .	Byte	 0080	  _DATA	
+QUIT . . . . . . . . . . . . . .	L Near	 028D	  _TEXT	
+StatusLine . . . . . . . . . . .	Byte	 0050	  _DATA	
+Xclick . . . . . . . . . . . . .	Word	 007C	  _DATA	
+Xcoordinate  . . . . . . . . . .	Word	 0078	  _DATA	
+YClick . . . . . . . . . . . . .	Word	 007E	  _DATA	
+Ycoordinate  . . . . . . . . . .	Word	 007A	  _DATA	
+black  . . . . . . . . . . . . .	Number	 0000h	 
+blue . . . . . . . . . . . . . .	Number	 0001h	 
+border . . . . . . . . . . . . .	Byte	 00FA	  _DATA	
+brown  . . . . . . . . . . . . .	Number	 0006h	 
+counter  . . . . . . . . . . . .	Byte	 00F5	  _DATA	
+cyan . . . . . . . . . . . . . .	Number	 0003h	 
+exit . . . . . . . . . . . . . .	Text   	 .EXIT
+game . . . . . . . . . . . . . .	Byte	 0508	  _DATA	
+gray . . . . . . . . . . . . . .	Number	 0008h	 
+green  . . . . . . . . . . . . .	Number	 0002h	 
+hrs  . . . . . . . . . . . . . .	Byte	 0457	  _DATA	
+lightBlue  . . . . . . . . . . .	Number	 0009h	 
+lightCyan  . . . . . . . . . . .	Number	 000Bh	 
+lightGray  . . . . . . . . . . .	Number	 0007h	 
+lightGreen . . . . . . . . . . .	Number	 000Ah	 
+lightMagenta . . . . . . . . . .	Number	 000Dh	 
+lightRed . . . . . . . . . . . .	Number	 000Ch	 
+magenta  . . . . . . . . . . . .	Number	 0005h	 
+member_1 . . . . . . . . . . . .	Byte	 0552	  _DATA	
+member_2 . . . . . . . . . . . .	Byte	 0563	  _DATA	
+member . . . . . . . . . . . . .	Byte	 0540	  _DATA	
+mins . . . . . . . . . . . . . .	Byte	 0458	  _DATA	
+pause1 . . . . . . . . . . . . .	Byte	 0452	  _DATA	
+pla  . . . . . . . . . . . . . .	Byte	 008E	  _DATA	
+project_name . . . . . . . . . .	Byte	 0537	  _DATA	
+project  . . . . . . . . . . . .	Byte	 0522	  _DATA	
+random . . . . . . . . . . . . .	Byte	 0453	  _DATA	
+red  . . . . . . . . . . . . . .	Number	 0004h	 
+row  . . . . . . . . . . . . . .	Byte	 00F7	  _DATA	
+sad  . . . . . . . . . . . . . .	Word	 00F8	  _DATA	
+scancode . . . . . . . . . . . .	Byte	 0456	  _DATA	
+scores . . . . . . . . . . . . .	Word	 0454	  _DATA	
+secs . . . . . . . . . . . . . .	Byte	 0459	  _DATA	
+shape10  . . . . . . . . . . . .	Byte	 04B8	  _DATA	
+shape11  . . . . . . . . . . . .	Byte	 04C0	  _DATA	
+shape12  . . . . . . . . . . . .	Byte	 04C8	  _DATA	
+shape13  . . . . . . . . . . . .	Byte	 04D0	  _DATA	
+shape14  . . . . . . . . . . . .	Byte	 04D8	  _DATA	
+shape15  . . . . . . . . . . . .	Byte	 04E0	  _DATA	
+shape16  . . . . . . . . . . . .	Byte	 04E8	  _DATA	
+shape17  . . . . . . . . . . . .	Byte	 04F0	  _DATA	
+shape18  . . . . . . . . . . . .	Byte	 04F8	  _DATA	
+shape19  . . . . . . . . . . . .	Byte	 0500	  _DATA	
+shape1 . . . . . . . . . . . . .	Byte	 0470	  _DATA	
+shape2 . . . . . . . . . . . . .	Byte	 0478	  _DATA	
+shape3 . . . . . . . . . . . . .	Byte	 0480	  _DATA	
+shape4 . . . . . . . . . . . . .	Byte	 0488	  _DATA	
+shape5 . . . . . . . . . . . . .	Byte	 0490	  _DATA	
+shape6 . . . . . . . . . . . . .	Byte	 0498	  _DATA	
+shape7 . . . . . . . . . . . . .	Byte	 04A0	  _DATA	
+shape8 . . . . . . . . . . . . .	Byte	 04A8	  _DATA	
+shape9 . . . . . . . . . . . . .	Byte	 04B0	  _DATA	
+shape  . . . . . . . . . . . . .	Byte	 00E5	  _DATA	
+sir  . . . . . . . . . . . . . .	Byte	 058A	  _DATA	
+string1  . . . . . . . . . . . .	Byte	 045A	  _DATA	
+string2  . . . . . . . . . . . .	Byte	 0466	  _DATA	
+submit . . . . . . . . . . . . .	Byte	 0579	  _DATA	
+temp1  . . . . . . . . . . . . .	Word	 008C	  _DATA	
+temporary  . . . . . . . . . . .	Byte	 00F6	  _DATA	
+temp . . . . . . . . . . . . . .	Word	 059D	  _DATA	
+user . . . . . . . . . . . . . .	Byte	 00A6	  _DATA	
+white  . . . . . . . . . . . . .	Number	 000Fh	 
+yellow . . . . . . . . . . . . .	Number	 000Eh	 
+
+	   1 Warnings
+	   0 Errors
